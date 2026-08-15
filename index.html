@@ -10,7 +10,7 @@
     --text:#fbe7f0; --sub:#cc9ab5;
     --accent:#f2789f; --accent-deep:#e0567f;
     --jade:#5fc7a3; --rust:#ef6f7a;
-    --cash:#8aa0e8; --save:#5fc7a3; --invest:#cd8ae6; --pension:#f4b26b; --realty:#7cc98f; --debt:#ef6f7a;
+    --cash:#8aa0e8; --save:#5fc7a3; --invest:#cd8ae6; --pension:#f4b26b; --realty:#7cc98f; --debt:#ef6f7a; --crypto:#e0a53d;
   }
   @media (prefers-color-scheme: light){
     :root{ --ink:#fff2f7; --ink2:#ffffff; --ink3:#ffe4ee; --line:#f8cee0;
@@ -205,7 +205,7 @@
     <div class="comp-legend" id="simBreakdown"></div>
 
     <div class="howto" style="margin-top:14px;">
-      <b>가정</b> — 부동산 연 3%, 주식·투자 연 7%, 연금 연 5%, 현금·예금 연 2% 복리 성장 (부채는 변동 없다고 가정). 세 슬라이더 다 통상적인 참고값과 사용자가 입력한 가정일 뿐 투자자문이 아니며, 실제 수익률은 이보다 낮거나 마이너스일 수 있습니다.
+      <b>가정 (실제 통계 기반)</b> — 🏠 부동산 연 8.5% (서울 아파트 2002~2021 누적 약 420%·5.2배 상승의 복리 환산, 한국부동산원·언론 보도 기준) · 📈 주식/펀드 연 10% (S&P500 최근 30년 명목 연평균, Fidelity 기준) · 💵 채권 연 4% · 🏦 현금성 연 2% · ₿ 가상자산 연 0% (변동성이 너무 커서 과거 수익률로 미래를 예측하는 건 무의미하다고 보고 보수적으로 가정) · 🚗 자동차 연 0%. 부채는 변동 없다고 가정. 모두 참고용 역사적 평균이며 투자자문이 아니고, 실제 수익률은 이보다 낮거나 마이너스일 수 있습니다.
     </div>
   </section>
 
@@ -236,7 +236,6 @@
 const DATA = {
   "members": ["아빠", "엄마", "시아", "시우"],
   "categories": ["입출금", "저축", "투자", "연금", "부동산", "부채"],
-  "assumptions": { "입출금": 0.02, "저축": 0.02, "투자": 0.07, "연금": 0.05, "부동산": 0.03 },
   "snapshots": [
     {
       "date": "2026-08-12", "member": "아빠", "source": "screenshots/아빠_20260812_토스자산.jpg",
@@ -500,35 +499,78 @@ if(sp500Total>0){
   </svg>`;
 })();
 
-// ── 미래 자산 시뮬레이터 (인터랙티브) ──
-const RATES = DATA.assumptions;
-const baseCat = {}; Object.keys(RATES).forEach(c=> baseCat[c] = catTotals[c]||0);
+// ── 미래 자산 시뮬레이터 (인터랙티브, 자산유형별 실제 통계 기반 성장률) ──
+const GROWTH_RATES = {
+  realestate: 0.085, // 서울 아파트 2002~2021 약 5.2배(누적 420%) 상승의 복리 환산 (한국부동산원·언론 보도)
+  equity:     0.10,  // S&P500 최근 30년 명목 연평균 (Fidelity)
+  bond:       0.04,  // 채권형 자산 장기 평균 추정
+  cash:       0.02,  // 현금성/예수금
+  crypto:     0.0,   // 변동성이 너무 커서 과거 수익률로 미래 예측 불가 → 보수적 가정
+  car:        0.0    // 감가상각 단순화
+};
+const TYPE_LABEL = { realestate:'🏠 부동산', equity:'📈 주식/펀드', bond:'💵 채권', cash:'🏦 현금성', crypto:'₿ 가상자산', car:'🚗 자동차' };
+const TYPE_COLOR = { realestate:'var(--realty)', equity:'var(--invest)', bond:'var(--cash)', cash:'var(--save)', crypto:'var(--crypto)', car:'var(--sub)' };
+
+function classifyHolding(name){
+  if(/비트코인|BTC/i.test(name)) return 'crypto';
+  if(/채권|국채/.test(name)) return 'bond';
+  if(/예수금|현금/.test(name)) return 'cash';
+  return 'equity';
+}
+function buildPrincipals(){
+  const list = [];
+  current.forEach(r=>{
+    if(r.balance<0) return;
+    if(r.category==='부동산'){
+      list.push({ type: r.institution==='기타자산' ? 'car' : 'realestate', value:r.balance });
+    } else if(r.category==='입출금' || r.category==='저축'){
+      list.push({ type:'cash', value:r.balance });
+    } else if(r.category==='투자' || r.category==='연금'){
+      if(r.holdings && r.holdings.length){
+        r.holdings.forEach(h => list.push({ type: classifyHolding(h.name), value: h.value }));
+      } else {
+        list.push({ type:'equity', value: r.balance });
+      }
+    }
+  });
+  return list;
+}
+const basePrincipals = buildPrincipals();
+const realEstateOnly = basePrincipals.filter(p=>p.type==='realestate').reduce((s,p)=>s+p.value,0);
 const baseYear = new Date(lastDate).getFullYear();
 
 const simYear = document.getElementById('simYear');
 const simMove = document.getElementById('simMove');
 const simContrib = document.getElementById('simContrib');
-simMove.max = Math.round(baseCat['부동산']||0);
+simMove.max = Math.round(realEstateOnly);
 
 function simulate(years, move, contrib){
-  const cat = Object.assign({}, baseCat);
-  const realEstate = cat['부동산']||0;
-  const moveClamped = Math.min(move, realEstate);
-  cat['부동산'] = realEstate - moveClamped;
-  cat['투자'] = (cat['투자']||0) + moveClamped;
-
-  const catFV = {}; let total = 0;
-  Object.keys(RATES).forEach(c=>{
-    const principal = cat[c]||0;
-    const g = RATES[c];
-    let fv = principal*Math.pow(1+g, years);
-    if(c==='투자' && contrib>0 && years>0){
-      fv += contrib*((Math.pow(1+g,years)-1)/g);
+  let remaining = Math.min(move, realEstateOnly);
+  const moved = remaining;
+  const principals = basePrincipals.map(p=>{
+    if(remaining>0 && p.type==='realestate'){
+      const take = Math.min(p.value, remaining);
+      remaining -= take;
+      return { type:p.type, value:p.value-take };
     }
-    catFV[c] = fv;
+    return p;
+  });
+  if(moved>0) principals.push({ type:'equity', value: moved });
+
+  const byType = {}; let total = 0;
+  principals.forEach(p=>{
+    const g = GROWTH_RATES[p.type];
+    const fv = p.value*Math.pow(1+g, years);
+    byType[p.type] = (byType[p.type]||0) + fv;
     total += fv;
   });
-  return {total: total - totalDebt, catFV};
+  if(contrib>0 && years>0){
+    const g = GROWTH_RATES.equity;
+    const fv = contrib*((Math.pow(1+g,years)-1)/g);
+    byType.equity = (byType.equity||0) + fv;
+    total += fv;
+  }
+  return { total: total - totalDebt, byType };
 }
 
 function updateSim(){
@@ -538,10 +580,10 @@ function updateSim(){
   document.getElementById('simMoveLabel').textContent = won(move);
   document.getElementById('simContribLabel').textContent = won(contrib) + "/년";
   document.getElementById('simNet').textContent = won(r.total);
-  document.getElementById('simBreakdown').innerHTML = Object.entries(r.catFV)
+  document.getElementById('simBreakdown').innerHTML = Object.entries(r.byType)
     .filter(([,v])=>v>0.5)
     .sort((a,b)=>b[1]-a[1])
-    .map(([c,v])=>`<span><span class="dot" style="background:${CAT_HEX[c]}"></span>${c} <b class="num">${won(v)}</b></span>`).join('');
+    .map(([t,v])=>`<span><span class="dot" style="background:${TYPE_COLOR[t]}"></span>${TYPE_LABEL[t]||t} <b class="num">${won(v)}</b></span>`).join('');
 }
 simYear.oninput = updateSim;
 simMove.oninput = updateSim;
