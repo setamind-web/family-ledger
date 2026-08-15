@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>우리 가족 자산통장</title>
+<style>
+  :root{
+    --ink:#2b1522; --ink2:#371c2c; --ink3:#432437; --line:#5e2f4c;
+    --text:#fbe7f0; --sub:#cc9ab5;
+    --accent:#f2789f; --accent-deep:#e0567f;
+    --jade:#5fc7a3; --rust:#ef6f7a;
+    --cash:#8aa0e8; --save:#5fc7a3; --invest:#cd8ae6; --pension:#f4b26b; --realty:#7cc98f; --debt:#ef6f7a;
+  }
+  @media (prefers-color-scheme: light){
+    :root{ --ink:#fff2f7; --ink2:#ffffff; --ink3:#ffe4ee; --line:#f8cee0;
+      --text:#4a2438; --sub:#a2748c; --accent:#e8608f; --accent-deep:#c84571; }
+  }
+  :root[data-theme="dark"]{ --ink:#2b1522; --ink2:#371c2c; --ink3:#432437; --line:#5e2f4c;
+    --text:#fbe7f0; --sub:#cc9ab5; --accent:#f2789f; --accent-deep:#e0567f; }
+  :root[data-theme="light"]{ --ink:#fff2f7; --ink2:#ffffff; --ink3:#ffe4ee; --line:#f8cee0;
+    --text:#4a2438; --sub:#a2748c; --accent:#e8608f; --accent-deep:#c84571; }
+
+  *{box-sizing:border-box;}
+  body{margin:0;}
+  .ledger{
+    background:var(--ink); color:var(--text); min-height:100vh;
+    font-family:'Pretendard','Malgun Gothic',-apple-system,BlinkMacSystemFont,sans-serif;
+    padding:32px 20px 90px; transition:background .2s;
+  }
+  .num{font-variant-numeric:tabular-nums; font-feature-settings:"tnum" 1; font-family:ui-monospace,'SFMono-Regular',Consolas,'Noto Sans Mono',monospace;}
+  .wrap{max-width:920px; margin:0 auto;}
+
+  .masthead{display:flex; justify-content:space-between; align-items:flex-end; gap:16px; margin-bottom:22px; flex-wrap:wrap;
+    border-bottom:1px solid var(--line); padding-bottom:16px;}
+  .masthead .eyebrow{font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:var(--accent);}
+  .masthead h1{font-family:'Noto Serif KR','Nanum Myeongjo',ui-serif,Georgia,serif; font-size:26px; font-weight:700;
+    margin:4px 0 0; text-wrap:balance;}
+  .masthead .updated{font-size:12px; color:var(--sub); text-align:right;}
+
+  .cover{
+    background:linear-gradient(160deg,var(--ink2),var(--ink3));
+    border:1px solid var(--line); border-radius:22px; padding:30px 32px; margin-bottom:20px; position:relative; overflow:hidden;
+  }
+  .cover::before{content:""; position:absolute; top:0; left:0; right:0; height:3px;
+    background:linear-gradient(90deg,var(--accent),transparent 70%);}
+  .cover .label{font-size:13px; color:var(--sub); letter-spacing:.02em;}
+  .cover .amount{font-family:'Noto Serif KR','Nanum Myeongjo',ui-serif,Georgia,serif; font-size:44px; font-weight:700;
+    color:var(--accent); margin-top:6px; letter-spacing:-.5px;}
+  .cover .sub{display:flex; gap:32px; margin-top:18px; flex-wrap:wrap;}
+  .cover .sub div{font-size:12px; color:var(--sub);}
+  .cover .sub b{display:block; font-size:16px; color:var(--text); margin-top:2px; font-weight:600;}
+  .cover .sub b.rust{color:var(--rust);}
+
+  .entries{display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:20px;}
+  @media (max-width:760px){ .entries{grid-template-columns:repeat(2,1fr);} }
+  .entry{background:var(--ink2); border:1px solid var(--line); border-radius:18px; padding:16px; position:relative;}
+  .entry .who{font-size:12px; color:var(--sub); display:flex; justify-content:space-between; align-items:center;}
+  .entry .tag{color:var(--accent); font-size:12px;}
+  .entry .net{font-size:19px; font-weight:700; margin-top:8px;}
+  .entry .bd{font-size:11px; color:var(--sub); margin-top:8px; line-height:1.6;}
+  .entry .bd .rust{color:var(--rust);}
+
+  section.panel{background:var(--ink2); border:1px solid var(--line); border-radius:22px; padding:22px 24px; margin-bottom:16px;}
+  section.panel h2{font-family:'Noto Serif KR','Nanum Myeongjo',ui-serif,Georgia,serif; font-size:16px; margin:0 0 16px; font-weight:700;}
+
+  .stackbar{display:flex; height:22px; border-radius:11px; overflow:hidden; border:1px solid var(--line);}
+  .stackbar div{height:100%;}
+  .comp-legend{display:flex; flex-wrap:wrap; gap:8px 20px; margin-top:16px; font-size:12px;}
+  .comp-legend span{display:inline-flex; align-items:center; gap:7px; color:var(--sub);}
+  .comp-legend b{color:var(--text); font-weight:600;}
+  .dot{width:9px; height:9px; border-radius:50%; display:inline-block;}
+
+  .filters{display:flex; gap:8px; margin-bottom:14px; flex-wrap:wrap;}
+  select{background:var(--ink3); color:var(--text); border:1px solid var(--line); border-radius:12px;
+    padding:7px 10px; font-size:13px; font-family:inherit;}
+  .tablewrap{overflow-x:auto; border:1px solid var(--line); border-radius:16px;}
+  table{width:100%; border-collapse:collapse; font-size:13px; min-width:640px;}
+  th,td{text-align:left; padding:10px 12px; border-bottom:1px solid var(--line);}
+  th{color:var(--sub); font-weight:600; font-size:11px; letter-spacing:.04em; text-transform:uppercase;
+    background:var(--ink3); position:sticky; top:0;}
+  tbody tr:nth-child(even){background:color-mix(in srgb, var(--ink3) 45%, transparent);}
+  td.amt{text-align:right;}
+  tr.debt td.amt{color:var(--rust);}
+  td .note{color:var(--sub); font-size:11px;}
+
+  .howto{background:var(--ink3); border:1px dashed var(--line); border-radius:16px; padding:16px 18px;
+    font-size:12.5px; color:var(--sub); line-height:1.7;}
+  .howto b{color:var(--text);}
+  footer.priv{color:var(--sub); font-size:11px; margin-top:20px; text-align:center; opacity:.7;}
+
+  .family{margin-bottom:22px;}
+  .family .cap{font-size:13px; color:var(--sub); margin-bottom:14px;}
+  .family-strip{display:flex; gap:16px; overflow-x:auto; padding:10px 4px 18px;}
+  .family-strip img{
+    height:190px; width:auto; display:block; border-radius:6px;
+    border:7px solid var(--ink2); box-shadow:0 6px 18px rgba(233,96,143,.28);
+    flex-shrink:0; transition:transform .15s ease;
+  }
+  .family-strip img:hover{transform:translateY(-4px) rotate(0deg) !important;}
+  .family-strip img:nth-child(1){transform:rotate(-3deg);}
+  .family-strip img:nth-child(2){transform:rotate(2deg);}
+  .family-strip img:nth-child(3){transform:rotate(-1.5deg);}
+  .family-strip img:nth-child(4){transform:rotate(3deg);}
+  .family-strip img:nth-child(5){transform:rotate(-2deg);}
+
+  /* holdings */
+  .holding-card{background:var(--ink3); border-radius:14px; padding:13px 16px; margin-bottom:10px;}
+  .holding-head{display:flex; justify-content:space-between; align-items:center; font-size:13px; font-weight:600; margin-bottom:9px;}
+  .holding-head .name{display:flex; align-items:center; gap:6px;}
+  .holding-members{font-size:11px; color:var(--sub); margin-top:7px; display:flex; flex-wrap:wrap; gap:4px 12px;}
+  .callout{margin-top:14px; font-size:12.5px; color:var(--accent); background:color-mix(in srgb, var(--accent) 12%, transparent);
+    border-radius:12px; padding:10px 14px;}
+
+  /* simulator */
+  .sim-row{margin-bottom:20px;}
+  .sim-row .row-head{display:flex; justify-content:space-between; font-size:13px; color:var(--sub); margin-bottom:8px;}
+  .sim-row .row-head b{color:var(--text); font-weight:700;}
+  input[type=range]{-webkit-appearance:none; width:100%; height:6px; border-radius:3px; background:var(--line); outline:none; margin:0;}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none; width:20px; height:20px; border-radius:50%;
+    background:var(--accent); cursor:pointer; box-shadow:0 2px 8px rgba(0,0,0,.35); border:3px solid var(--ink2);}
+  input[type=range]::-moz-range-thumb{width:20px; height:20px; border-radius:50%; background:var(--accent); border:3px solid var(--ink2); cursor:pointer;}
+  .sim-result{background:linear-gradient(160deg,var(--ink3),var(--ink2)); border:1px solid var(--line); border-radius:18px;
+    padding:22px 24px; margin:18px 0; text-align:center;}
+  .sim-result .label{font-size:12.5px; color:var(--sub);}
+  .sim-result .amount{font-family:'Noto Serif KR','Nanum Myeongjo',ui-serif,Georgia,serif; font-size:34px; font-weight:700; color:var(--accent); margin-top:4px;}
+
+  /* music button */
+  .music-btn{
+    position:fixed; bottom:22px; right:22px; width:54px; height:54px; border-radius:50%;
+    background:var(--accent); color:#fff; border:none; font-size:22px; cursor:pointer;
+    box-shadow:0 8px 20px rgba(0,0,0,.35); z-index:80; transition:transform .15s ease;
+  }
+  .music-btn:hover{transform:scale(1.08);}
+  .music-btn:active{transform:scale(.95);}
+</style>
+</head>
+<body>
+<div class="ledger">
+<div class="wrap">
+  <div class="masthead">
+    <div>
+      <div class="eyebrow">🩷 Family Ledger · 가족 자산통장</div>
+      <h1>우리 가족 자산 현황</h1>
+    </div>
+    <div class="updated" id="updated"></div>
+  </div>
+
+  <div class="family">
+    <div class="cap">우리 넷, 오늘도 자라는 중 🌱</div>
+    <div class="family-strip">
+      <img src="photos/family-portrait-1.jpg" alt="가족사진">
+      <img src="photos/family-celebration.jpg" alt="가족 돌잔치">
+      <img src="photos/sia-smile.jpg" alt="시아">
+      <img src="photos/siwoo-seaweed.jpg" alt="시우">
+      <img src="photos/siblings-couch.jpg" alt="시아와 시우">
+    </div>
+  </div>
+
+  <div class="cover">
+    <div class="label">💰 가족 전체 순자산</div>
+    <div class="amount num" id="totalNet">-</div>
+    <div class="sub">
+      <div>총자산 <b class="num" id="totalAssets">-</b></div>
+      <div>총부채 <b class="num rust" id="totalDebt">-</b></div>
+    </div>
+  </div>
+
+  <div class="entries" id="memberCards"></div>
+
+  <section class="panel">
+    <h2>🧩 자산 구성</h2>
+    <div class="stackbar" id="stackbar"></div>
+    <div class="comp-legend" id="compLegend"></div>
+  </section>
+
+  <section class="panel">
+    <h2>📦 가족 합산 보유 종목</h2>
+    <div id="holdingsList"></div>
+    <div class="callout" id="sp500Callout"></div>
+    <div class="howto" style="margin-top:14px;">
+      아빠 명의 NH증권 계좌 등 일부는 계좌 개요 화면만 확인돼서 세부 종목이 아직 안 나뉘어 있어요 (표에 "미분류"로 표시). 계좌 상세(보유종목) 화면 스크린샷을 주시면 더 세밀하게 나눠드릴게요.
+    </div>
+  </section>
+
+  <section class="panel">
+    <h2>📈 순자산 추이</h2>
+    <div id="trendChart"></div>
+  </section>
+
+  <section class="panel">
+    <h2>🔮 미래 자산 시뮬레이터</h2>
+
+    <div class="sim-row">
+      <div class="row-head"><span>연도</span><b id="simYearLabel"></b></div>
+      <input type="range" id="simYear" min="0" max="30" step="1" value="10">
+    </div>
+    <div class="sim-row">
+      <div class="row-head"><span>🏠 부동산 → 📈 주식 이동</span><b id="simMoveLabel" class="num"></b></div>
+      <input type="range" id="simMove" min="0" max="0" step="1000000" value="0">
+    </div>
+    <div class="sim-row">
+      <div class="row-head"><span>연간 추가 저축·투자액</span><b id="simContribLabel" class="num"></b></div>
+      <input type="range" id="simContrib" min="0" max="100000000" step="1000000" value="0">
+    </div>
+
+    <div class="sim-result">
+      <div class="label">이 조건이라면, 그 해의 가족 순자산은</div>
+      <div class="amount num" id="simNet">-</div>
+    </div>
+    <div class="comp-legend" id="simBreakdown"></div>
+
+    <div class="howto" style="margin-top:14px;">
+      <b>가정</b> — 부동산 연 3%, 주식·투자 연 7%, 연금 연 5%, 현금·예금 연 2% 복리 성장 (부채는 변동 없다고 가정). 세 슬라이더 다 통상적인 참고값과 사용자가 입력한 가정일 뿐 투자자문이 아니며, 실제 수익률은 이보다 낮거나 마이너스일 수 있습니다.
+    </div>
+  </section>
+
+  <section class="panel">
+    <h2>📋 계좌별 상세</h2>
+    <div class="filters">
+      <select id="fMember"><option value="">전체 구성원</option></select>
+      <select id="fCategory"><option value="">전체 카테고리</option></select>
+    </div>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>날짜</th><th>구성원</th><th>카테고리</th><th>기관</th><th>항목</th><th style="text-align:right">잔액</th></tr></thead>
+        <tbody id="detailBody"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <div class="howto">
+    <b>업데이트 방법</b> — 새 스크린샷은 가장에게 보내주시면 반영 후 이 페이지 파일을 다시 올려드립니다. 링크 주소는 바뀌지 않아요.
+  </div>
+  <footer class="priv">가족 재정 정보를 포함한 개인 페이지입니다. 링크를 아는 사람은 열람할 수 있으니 외부 공유는 주의해주세요.</footer>
+</div>
+</div>
+
+<button class="music-btn" id="musicToggle" aria-label="배경음악 재생/정지">🎵</button>
+
+<script>
+const DATA = {
+  "members": ["아빠", "엄마", "시아", "시우"],
+  "categories": ["입출금", "저축", "투자", "연금", "부동산", "부채"],
+  "assumptions": { "입출금": 0.02, "저축": 0.02, "투자": 0.07, "연금": 0.05, "부동산": 0.03 },
+  "snapshots": [
+    {
+      "date": "2026-08-12", "member": "아빠", "source": "screenshots/아빠_20260812_토스자산.jpg",
+      "accounts": [
+        { "category": "입출금", "institution": "토스뱅크 연동", "name": "입출금 계좌 합계 (다수 계좌)", "balance": 31890876 },
+        { "category": "부채", "institution": "토스뱅크", "name": "신용 집단대출 (기업체일괄약정)", "balance": -70000000, "note": "금리 5.17% (2026-07-22 확인, 이전 값 유지)" },
+        { "category": "부동산", "institution": "기타자산", "name": "자동차 2대", "balance": 33570000, "note": "2026-07-22 확인, 이전 값 유지" }
+      ]
+    },
+    {
+      "date": "2026-08-15", "member": "아빠", "source": "screenshots/KakaoTalk_20260815_221951131.jpg",
+      "accounts": [
+        { "category": "투자", "institution": "토스 내투자 (연결계좌 종합)", "name": "국내·해외 주식 + 기타투자 + 예수금", "balance": 337959174,
+          "note": "총 투자자산 742,688,596원 중 장모님 명의를 대신 운용 중인 자금 404,729,422원(SPY 134,010,046 + 미국국채-토스증권 105,010,955 + 관련 예수금 165,708,421 = 2026-07-22 Toss 총자산 화면의 '토스증권 기본계좌·자산 제외' 항목과 동일 금액)은 본인 자산이 아니라서 제외. 뱅가드 채권ETF는 본인 소유라 유지",
+          "holdings": [
+            { "name": "KODEX 미국S&P500(H)", "value": 165546990 },
+            { "name": "삼성SDI", "value": 31992000 },
+            { "name": "KODEX 미국나스닥100", "value": 19673130 },
+            { "name": "TIGER 미국S&P500배당귀족", "value": 11560720 },
+            { "name": "삼성전자", "value": 1098000 },
+            { "name": "카카오", "value": 40000 },
+            { "name": "뱅가드 미국 초장기 국채 ETF", "value": 43361040 },
+            { "name": "아이셰어즈 러셀2000 ETF", "value": 39409825 },
+            { "name": "애플", "value": 8804 },
+            { "name": "엔비디아", "value": 2556 },
+            { "name": "테슬라", "value": 2429 },
+            { "name": "알파벳 A", "value": 1964 },
+            { "name": "메타 플랫폼스", "value": 1674 },
+            { "name": "마이크로소프트", "value": 1406 },
+            { "name": "아마존닷컴", "value": 1118 },
+            { "name": "나이키", "value": 26 },
+            { "name": "한국투자미국배당귀족증권자투자신탁H(주식)-Ce", "value": 81259 },
+            { "name": "예수금(현금)", "value": 25176233 }
+          ]
+        }
+      ]
+    },
+    {
+      "date": "2026-08-11", "member": "엄마", "source": "screenshots/엄마_20260811_NH퇴직연금.jpg",
+      "accounts": [
+        { "category": "연금", "institution": "NH증권", "name": "DC·IRP 퇴직연금", "balance": 83504802,
+          "note": "평가손익 +3,319,872. KODEX 미국S&P500·KODEX 장기종합채권 등 혼합, 종목별 금액 분리는 미상" }
+      ]
+    },
+    {
+      "date": "2026-08-11", "member": "엄마", "source": "screenshots/엄마_20260811_CMA주식계좌.jpg",
+      "accounts": [
+        { "category": "투자", "institution": "증권사 CMA (201-01-069752)", "name": "주식잔고", "balance": 95830235,
+          "note": "순자산 기준. 평가손익 +5,653,480 (+6.27%)",
+          "holdings": [ { "name": "KODEX 미국S&P500", "value": 95812640 }, { "name": "예수금(현금)", "value": 17595 } ] }
+      ]
+    },
+    {
+      "date": "2026-08-11", "member": "공동(아빠+엄마 지분반반)", "source": "manual",
+      "accounts": [
+        { "category": "부동산", "institution": "소유부동산", "name": "올림픽파크 포레온 49㎡ (강동구 둔촌동)",
+          "balance": 2300000000, "note": "사용자 제공 추정 시세. 실거래가 자동조회 실패로 수동 입력값 사용" },
+        { "category": "부채", "institution": "전세보증금(임대)", "name": "올림픽파크 포레온 전세보증금 - 세입자에게 반환 예정",
+          "balance": -450000000, "note": "포레온을 세입자에게 전세로 임대, 계약 종료시 반환 의무" }
+      ]
+    },
+    {
+      "date": "2026-08-11", "member": "엄마", "source": "manual",
+      "accounts": [
+        { "category": "부동산", "institution": "거주부동산 전세보증금", "name": "수원 삼성태영아파트 전세보증금 (거주지)",
+          "balance": 280000000, "note": "엄마 명의. 우리 가족이 거주 중, 계약 종료시 돌려받을 자산" }
+      ]
+    },
+    {
+      "date": "2026-08-11", "member": "시우", "source": "screenshots/시우_20260811_키움해외잔고.jpg",
+      "accounts": [
+        { "category": "투자", "institution": "키움증권 (해외증권 6322-8982)", "name": "해외주식 잔고", "balance": 20812277,
+          "note": "평가금액 기준. 평가손익 +2,112,409 (+11.35%)",
+          "holdings": [ { "name": "SPY (S&P500 SPDR ETF)", "value": 20812277 } ] }
+      ]
+    },
+    {
+      "date": "2026-08-11", "member": "시아", "source": "screenshots/시아_20260811_증권사잔고.jpg",
+      "accounts": [
+        { "category": "투자", "institution": "증권사 종합매매 (207-01-572717)", "name": "주식잔고", "balance": 25697709,
+          "note": "순자산 기준. 평가손익 +4,594,500 (+44.66%)",
+          "holdings": [ { "name": "KODEX 미국S&P500", "value": 14880000 }, { "name": "예수금(현금)", "value": 10817709 } ] }
+      ]
+    }
+  ]
+};
+
+const CAT_HEX = { "입출금":"var(--cash)", "저축":"var(--save)", "투자":"var(--invest)",
+  "연금":"var(--pension)", "부동산":"var(--realty)", "부채":"var(--debt)" };
+const MEMBER_EMOJI = { "아빠":"👨", "엄마":"👩", "시아":"👧", "시우":"👦" };
+const MEMBER_COLOR = { "아빠":"var(--cash)", "엄마":"var(--invest)", "시아":"var(--pension)", "시우":"var(--realty)" };
+
+function won(n){
+  const sign = n < 0 ? "-" : "";
+  return sign + Math.abs(Math.round(n)).toLocaleString('ko-KR') + "원";
+}
+
+const flat = [];
+DATA.snapshots.forEach(snap=>{
+  snap.accounts.forEach(acc=>{
+    flat.push({date:snap.date, member:snap.member, category:acc.category,
+      institution:acc.institution, name:acc.name, balance:acc.balance, note:acc.note||"", holdings:acc.holdings||null});
+  });
+});
+
+const latestMap = new Map();
+flat.slice().sort((a,b)=> a.date.localeCompare(b.date)).forEach(r=>{
+  latestMap.set(r.member+"|"+r.institution+"|"+r.name, r);
+});
+const current = Array.from(latestMap.values());
+
+function memberShares(row){
+  if(row.member.startsWith("공동")){
+    return [{member:"아빠", balance:row.balance/2},{member:"엄마", balance:row.balance/2}];
+  }
+  return [{member:row.member, balance:row.balance}];
+}
+
+const members = DATA.members;
+const memberTotals = {}; members.forEach(m=>memberTotals[m]={asset:0,debt:0});
+current.forEach(row=>{
+  memberShares(row).forEach(s=>{
+    if(!memberTotals[s.member]) memberTotals[s.member]={asset:0,debt:0};
+    if(s.balance<0) memberTotals[s.member].debt += -s.balance;
+    else memberTotals[s.member].asset += s.balance;
+  });
+});
+
+let totalAsset=0, totalDebt=0;
+current.forEach(r=>{ if(r.balance<0) totalDebt += -r.balance; else totalAsset += r.balance; });
+
+document.getElementById('totalNet').textContent = won(totalAsset-totalDebt);
+document.getElementById('totalAssets').textContent = won(totalAsset);
+document.getElementById('totalDebt').textContent = won(totalDebt);
+
+const lastDate = current.map(r=>r.date).sort().slice(-1)[0];
+document.getElementById('updated').textContent = "마지막 반영 " + lastDate + " · 구성원 " + members.length + "명";
+
+const mc = document.getElementById('memberCards');
+members.forEach(m=>{
+  const t = memberTotals[m] || {asset:0,debt:0};
+  const net = t.asset - t.debt;
+  const div = document.createElement('div');
+  div.className='entry';
+  div.innerHTML = `<div class="who">${MEMBER_EMOJI[m]||'💗'} ${m}<span class="tag">♥</span></div>
+    <div class="net num">${won(net)}</div>
+    <div class="bd">자산 <span class="num">${won(t.asset)}</span><br>부채 <span class="num rust">${won(t.debt)}</span></div>`;
+  mc.appendChild(div);
+});
+
+const catTotals = {};
+current.forEach(r=>{ if(r.balance<0) return; catTotals[r.category] = (catTotals[r.category]||0) + r.balance; });
+const catEntries = Object.entries(catTotals).filter(([,v])=>v>0).sort((a,b)=>b[1]-a[1]);
+const catSum = catEntries.reduce((s,[,v])=>s+v,0);
+
+document.getElementById('stackbar').innerHTML = catEntries.map(([cat,val])=>
+  `<div style="width:${(val/catSum*100).toFixed(2)}%;background:${CAT_HEX[cat]}" title="${cat}"></div>`
+).join('');
+document.getElementById('compLegend').innerHTML = catEntries.map(([cat,val])=>
+  `<span><span class="dot" style="background:${CAT_HEX[cat]}"></span>${cat} <b class="num">${won(val)}</b> (${(val/catSum*100).toFixed(1)}%)</span>`
+).join('');
+
+// ── 가족 합산 보유 종목 ──
+const holdingsAgg = {};
+current.forEach(r=>{
+  if(r.balance<0) return;
+  if(r.category!=='투자' && r.category!=='연금') return;
+  if(r.holdings && r.holdings.length){
+    r.holdings.forEach(h=>{
+      if(!holdingsAgg[h.name]) holdingsAgg[h.name]={total:0, byMember:{}};
+      holdingsAgg[h.name].total += h.value;
+      holdingsAgg[h.name].byMember[r.member] = (holdingsAgg[h.name].byMember[r.member]||0) + h.value;
+    });
+  } else {
+    const key = `${r.institution} · ${r.name} (미분류)`;
+    if(!holdingsAgg[key]) holdingsAgg[key]={total:0, byMember:{}};
+    holdingsAgg[key].total += r.balance;
+    holdingsAgg[key].byMember[r.member] = (holdingsAgg[key].byMember[r.member]||0) + r.balance;
+  }
+});
+const holdingsSorted = Object.entries(holdingsAgg).sort((a,b)=>b[1].total-a[1].total);
+document.getElementById('holdingsList').innerHTML = holdingsSorted.map(([name,agg])=>{
+  const members = Object.entries(agg.byMember).sort((a,b)=>b[1]-a[1]);
+  const segs = members.map(([m,v])=>`<div style="width:${(v/agg.total*100).toFixed(2)}%;background:${MEMBER_COLOR[m]||'var(--sub)'}"></div>`).join('');
+  const memberList = members.map(([m,v])=>`<span>${MEMBER_EMOJI[m]||''} ${m} ${won(v)}</span>`).join('');
+  return `<div class="holding-card">
+    <div class="holding-head"><span class="name">${name}</span><b class="num">${won(agg.total)}</b></div>
+    <div class="stackbar" style="height:10px;">${segs}</div>
+    <div class="holding-members">${memberList}</div>
+  </div>`;
+}).join('');
+
+const sp500Total = (holdingsAgg['KODEX 미국S&P500']?.total||0) + (holdingsAgg['SPY (S&P500 SPDR ETF)']?.total||0);
+if(sp500Total>0){
+  document.getElementById('sp500Callout').innerHTML =
+    `💡 서로 다른 상품(KODEX 미국S&P500, SPY)이지만 둘 다 S&amp;P500 지수를 추종해요 — 가족 전체로 보면 S&amp;P500 계열에만 <b class="num">${won(sp500Total)}</b>이 들어가 있어요.`;
+}
+
+// ── 과거 순자산 추이 ──
+(function drawTrend(){
+  const dates = Array.from(new Set(flat.map(r=>r.date))).sort();
+  const points = dates.map(d=>{
+    const upTo = flat.filter(r=>r.date<=d);
+    const map = new Map();
+    upTo.slice().sort((a,b)=>a.date.localeCompare(b.date)).forEach(r=>{
+      map.set(r.member+"|"+r.institution+"|"+r.name, r.balance);
+    });
+    return {date:d, net: Array.from(map.values()).reduce((s,v)=>s+v,0)};
+  });
+
+  const w=860,h=200,pad=44;
+  const vals = points.map(p=>p.net);
+  const min = Math.min(...vals,0), max = Math.max(...vals);
+  const range = (max-min)||1;
+  const x = i => pad + i*((w-2*pad)/Math.max(points.length-1,1));
+  const y = v => h-pad - ((v-min)/range)*(h-2*pad);
+
+  const path = points.map((p,i)=> (i===0?'M':'L')+x(i)+','+y(p.net)).join(' ');
+  const areaPath = path + ` L${x(points.length-1)},${h-pad} L${x(0)},${h-pad} Z`;
+  const dots = points.map((p,i)=>`<circle cx="${x(i)}" cy="${y(p.net)}" r="4" fill="var(--accent)" stroke="var(--ink2)" stroke-width="2"/>
+    <text x="${x(i)}" y="${y(p.net)-12}" font-size="11" text-anchor="middle" fill="var(--text)" class="num" style="font-weight:600">${(p.net/100000000).toFixed(2)}억</text>
+    <text x="${x(i)}" y="${h-16}" font-size="10" text-anchor="middle" fill="var(--sub)">${p.date}</text>`).join('');
+
+  document.getElementById('trendChart').innerHTML = `<svg viewBox="0 0 ${w} ${h}" width="100%" height="${h}" preserveAspectRatio="none">
+    <defs><linearGradient id="areaFill" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="var(--accent)" stop-opacity="0.22"/>
+      <stop offset="100%" stop-color="var(--accent)" stop-opacity="0"/>
+    </linearGradient></defs>
+    <line x1="${pad}" y1="${y(0)}" x2="${w-pad}" y2="${y(0)}" stroke="var(--line)" stroke-dasharray="3 3"/>
+    <path d="${areaPath}" fill="url(#areaFill)" stroke="none"/>
+    <path d="${path}" fill="none" stroke="var(--accent)" stroke-width="2.5"/>
+    ${dots}
+  </svg>`;
+})();
+
+// ── 미래 자산 시뮬레이터 (인터랙티브) ──
+const RATES = DATA.assumptions;
+const baseCat = {}; Object.keys(RATES).forEach(c=> baseCat[c] = catTotals[c]||0);
+const baseYear = new Date(lastDate).getFullYear();
+
+const simYear = document.getElementById('simYear');
+const simMove = document.getElementById('simMove');
+const simContrib = document.getElementById('simContrib');
+simMove.max = Math.round(baseCat['부동산']||0);
+
+function simulate(years, move, contrib){
+  const cat = Object.assign({}, baseCat);
+  const realEstate = cat['부동산']||0;
+  const moveClamped = Math.min(move, realEstate);
+  cat['부동산'] = realEstate - moveClamped;
+  cat['투자'] = (cat['투자']||0) + moveClamped;
+
+  const catFV = {}; let total = 0;
+  Object.keys(RATES).forEach(c=>{
+    const principal = cat[c]||0;
+    const g = RATES[c];
+    let fv = principal*Math.pow(1+g, years);
+    if(c==='투자' && contrib>0 && years>0){
+      fv += contrib*((Math.pow(1+g,years)-1)/g);
+    }
+    catFV[c] = fv;
+    total += fv;
+  });
+  return {total: total - totalDebt, catFV};
+}
+
+function updateSim(){
+  const year = +simYear.value, move = +simMove.value, contrib = +simContrib.value;
+  const r = simulate(year, move, contrib);
+  document.getElementById('simYearLabel').innerHTML = `<b class="num">${year}년 후</b> (${baseYear+year}년)`;
+  document.getElementById('simMoveLabel').textContent = won(move);
+  document.getElementById('simContribLabel').textContent = won(contrib) + "/년";
+  document.getElementById('simNet').textContent = won(r.total);
+  document.getElementById('simBreakdown').innerHTML = Object.entries(r.catFV)
+    .filter(([,v])=>v>0.5)
+    .sort((a,b)=>b[1]-a[1])
+    .map(([c,v])=>`<span><span class="dot" style="background:${CAT_HEX[c]}"></span>${c} <b class="num">${won(v)}</b></span>`).join('');
+}
+simYear.oninput = updateSim;
+simMove.oninput = updateSim;
+simContrib.oninput = updateSim;
+updateSim();
+
+// ── 계좌별 상세 테이블 ──
+const fMember = document.getElementById('fMember');
+const fCategory = document.getElementById('fCategory');
+Array.from(new Set(current.map(r=>r.member))).forEach(m=>{
+  const o=document.createElement('option'); o.value=m; o.textContent=m; fMember.appendChild(o);
+});
+Array.from(new Set(current.map(r=>r.category))).forEach(c=>{
+  const o=document.createElement('option'); o.value=c; o.textContent=c; fCategory.appendChild(o);
+});
+
+function renderTable(){
+  const mv = fMember.value, cv = fCategory.value;
+  const rows = current.filter(r=> (!mv||r.member===mv) && (!cv||r.category===cv) )
+    .sort((a,b)=> b.date.localeCompare(a.date) || Math.abs(b.balance)-Math.abs(a.balance));
+  document.getElementById('detailBody').innerHTML = rows.map(r=>`
+    <tr class="${r.balance<0?'debt':''}">
+      <td>${r.date}</td><td>${r.member}</td><td>${r.category}</td>
+      <td>${r.institution}</td><td>${r.name}${r.note?` <span class="note">· ${r.note}</span>`:''}</td>
+      <td class="amt num">${won(r.balance)}</td>
+    </tr>`).join('');
+}
+fMember.onchange = renderTable;
+fCategory.onchange = renderTable;
+renderTable();
+
+// ── 배경음악 (오르골풍, Web Audio API로 직접 생성 — 저작권 없음) ──
+(function music(){
+  const MELODY = [
+    {n:659.25,d:0.42},{n:783.99,d:0.42},{n:880.00,d:0.42},{n:783.99,d:0.42},
+    {n:659.25,d:0.42},{n:587.33,d:0.42},{n:523.25,d:0.80},
+    {n:587.33,d:0.42},{n:659.25,d:0.42},{n:783.99,d:0.42},{n:659.25,d:0.42},
+    {n:587.33,d:0.42},{n:523.25,d:0.42},{n:493.88,d:0.42},{n:523.25,d:0.9}
+  ];
+  let audioCtx=null, masterGain=null, playing=false, loopTimeoutId=null;
+  const btn = document.getElementById('musicToggle');
+
+  function ensureCtx(){
+    if(!audioCtx){
+      audioCtx = new (window.AudioContext||window.webkitAudioContext)();
+      masterGain = audioCtx.createGain();
+      masterGain.gain.value = 0.32;
+      masterGain.connect(audioCtx.destination);
+    }
+  }
+  function playNote(freq, start, dur){
+    const osc = audioCtx.createOscillator(); osc.type='sine'; osc.frequency.value=freq;
+    const g = audioCtx.createGain();
+    g.gain.setValueAtTime(0.0001, start);
+    g.gain.exponentialRampToValueAtTime(0.9, start+0.015);
+    g.gain.exponentialRampToValueAtTime(0.0001, start+dur);
+    osc.connect(g); g.connect(masterGain);
+    osc.start(start); osc.stop(start+dur+0.05);
+
+    const osc2 = audioCtx.createOscillator(); osc2.type='sine'; osc2.frequency.value=freq*2;
+    const g2 = audioCtx.createGain();
+    g2.gain.setValueAtTime(0.0001, start);
+    g2.gain.exponentialRampToValueAtTime(0.25, start+0.01);
+    g2.gain.exponentialRampToValueAtTime(0.0001, start+dur*0.6);
+    osc2.connect(g2); g2.connect(masterGain);
+    osc2.start(start); osc2.stop(start+dur*0.6+0.05);
+  }
+  function scheduleLoop(startTime){
+    let t = startTime;
+    MELODY.forEach(note=>{ playNote(note.n, t, note.d*0.92); t += note.d; });
+    return t - startTime;
+  }
+  function loopForever(){
+    if(!playing) return;
+    const dur = scheduleLoop(audioCtx.currentTime + 0.05);
+    loopTimeoutId = setTimeout(loopForever, Math.max(300, dur*1000 - 60));
+  }
+  function start(){
+    ensureCtx();
+    if(audioCtx.state==='suspended') audioCtx.resume();
+    playing = true; btn.textContent='🔊'; loopForever();
+  }
+  function stop(){
+    playing = false; btn.textContent='🎵';
+    if(loopTimeoutId) clearTimeout(loopTimeoutId);
+    if(audioCtx) audioCtx.suspend();
+  }
+  btn.onclick = ()=>{ playing ? stop() : start(); };
+})();
+</script>
+</body>
+</html>
