@@ -147,14 +147,8 @@
   </div>
 
   <div class="family">
-    <div class="cap">우리 넷, 오늘도 자라는 중 🌱</div>
-    <div class="family-strip">
-      <img src="photos/family-portrait-1.jpg" alt="가족사진">
-      <img src="photos/family-celebration.jpg" alt="가족 돌잔치">
-      <img src="photos/sia-smile.jpg" alt="시아">
-      <img src="photos/siwoo-seaweed.jpg" alt="시우">
-      <img src="photos/siblings-couch.jpg" alt="시아와 시우">
-    </div>
+    <div class="cap">우리 넷, 오늘도 자라는 중 🌱 <span style="opacity:.6">(들어올 때마다 다른 사진)</span></div>
+    <div class="family-strip" id="familyStrip"></div>
   </div>
 
   <div class="cover">
@@ -292,7 +286,7 @@ const DATA = {
       "accounts": [
         { "category": "투자", "institution": "증권사 CMA (201-01-069752)", "name": "주식잔고", "balance": 95830235,
           "note": "순자산 기준. 평가손익 +5,653,480 (+6.27%)",
-          "holdings": [ { "name": "KODEX 미국S&P500", "value": 95812640 }, { "name": "예수금(현금)", "value": 17595 } ] }
+          "holdings": [ { "name": "KODEX 미국S&P500(H)", "value": 95812640 }, { "name": "예수금(현금)", "value": 17595 } ] }
       ]
     },
     {
@@ -339,6 +333,21 @@ function won(n){
   const sign = n < 0 ? "-" : "";
   return sign + Math.abs(Math.round(n)).toLocaleString('ko-KR') + "원";
 }
+
+// ── 가족사진: 매번 무작위로 몇 장 뽑아 보여주기 ──
+(function familyPhotos(){
+  const POOL_SIZE = 115;
+  const SHOW = 5;
+  const pool = Array.from({length: POOL_SIZE}, (_, i) => `photos/pool/p${String(i+1).padStart(3,'0')}.jpg`);
+  for (let i = pool.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [pool[i], pool[j]] = [pool[j], pool[i]];
+  }
+  const picked = pool.slice(0, SHOW);
+  document.getElementById('familyStrip').innerHTML = picked.map(src =>
+    `<img src="${src}" alt="가족사진" loading="lazy" onerror="this.style.display='none'">`
+  ).join('');
+})();
 
 const flat = [];
 DATA.snapshots.forEach(snap=>{
