@@ -573,55 +573,120 @@ fMember.onchange = renderTable;
 fCategory.onchange = renderTable;
 renderTable();
 
-// ── 배경음악 (오르골풍, Web Audio API로 직접 생성 — 저작권 없음) ──
+// ── 배경음악 (러블리 카페 로파이, Web Audio API로 직접 작곡 — 저작권 없음) ──
 (function music(){
-  const MELODY = [
-    {n:659.25,d:0.42},{n:783.99,d:0.42},{n:880.00,d:0.42},{n:783.99,d:0.42},
-    {n:659.25,d:0.42},{n:587.33,d:0.42},{n:523.25,d:0.80},
-    {n:587.33,d:0.42},{n:659.25,d:0.42},{n:783.99,d:0.42},{n:659.25,d:0.42},
-    {n:587.33,d:0.42},{n:523.25,d:0.42},{n:493.88,d:0.42},{n:523.25,d:0.9}
+  const TEMPO = 92;
+  const BEAT = 60/TEMPO;
+  // Cmaj7 - Am7 - Fmaj7 - G7 (따뜻한 카페 재즈 진행)
+  const CHORDS = [
+    { root: 130.81, notes: [261.63, 329.63, 392.00, 493.88] },
+    { root: 110.00, notes: [220.00, 261.63, 329.63, 392.00] },
+    { root: 87.31,  notes: [174.61, 220.00, 261.63, 329.63] },
+    { root: 98.00,  notes: [196.00, 246.94, 293.66, 349.23] }
   ];
-  let audioCtx=null, masterGain=null, playing=false, loopTimeoutId=null;
+  const MELODY = [
+    329.63,392.00,440.00,392.00,
+    329.63,261.63,329.63,440.00,
+    440.00,349.23,440.00,523.25,
+    493.88,587.33,493.88,392.00
+  ];
+
+  let audioCtx=null, masterGain=null, playing=false, loopTimeoutId=null, noiseSrc=null;
   const btn = document.getElementById('musicToggle');
 
   function ensureCtx(){
     if(!audioCtx){
       audioCtx = new (window.AudioContext||window.webkitAudioContext)();
       masterGain = audioCtx.createGain();
-      masterGain.gain.value = 0.32;
+      masterGain.gain.value = 0.3;
       masterGain.connect(audioCtx.destination);
     }
   }
-  function playNote(freq, start, dur){
-    const osc = audioCtx.createOscillator(); osc.type='sine'; osc.frequency.value=freq;
+
+  function playPad(freq, start, dur, vol){
+    const filt = audioCtx.createBiquadFilter();
+    filt.type='lowpass'; filt.frequency.value=1800; filt.Q.value=0.5;
     const g = audioCtx.createGain();
     g.gain.setValueAtTime(0.0001, start);
-    g.gain.exponentialRampToValueAtTime(0.9, start+0.015);
+    g.gain.exponentialRampToValueAtTime(vol, start+0.25);
     g.gain.exponentialRampToValueAtTime(0.0001, start+dur);
-    osc.connect(g); g.connect(masterGain);
-    osc.start(start); osc.stop(start+dur+0.05);
+    filt.connect(g); g.connect(masterGain);
+    [1, 1.003, 2].forEach((mult, i)=>{
+      const o = audioCtx.createOscillator();
+      o.type = i===2 ? 'triangle' : 'sine';
+      o.frequency.value = freq*mult;
+      const og = audioCtx.createGain();
+      og.gain.value = i===2 ? 0.12 : 0.5;
+      o.connect(og); og.connect(filt);
+      o.start(start); o.stop(start+dur+0.1);
+    });
+  }
 
-    const osc2 = audioCtx.createOscillator(); osc2.type='sine'; osc2.frequency.value=freq*2;
-    const g2 = audioCtx.createGain();
-    g2.gain.setValueAtTime(0.0001, start);
-    g2.gain.exponentialRampToValueAtTime(0.25, start+0.01);
-    g2.gain.exponentialRampToValueAtTime(0.0001, start+dur*0.6);
-    osc2.connect(g2); g2.connect(masterGain);
-    osc2.start(start); osc2.stop(start+dur*0.6+0.05);
+  function playPluck(freq, start, dur){
+    const filt = audioCtx.createBiquadFilter();
+    filt.type='lowpass'; filt.frequency.value=2600; filt.Q.value=1.2;
+    const g = audioCtx.createGain();
+    g.gain.setValueAtTime(0.0001, start);
+    g.gain.exponentialRampToValueAtTime(0.5, start+0.008);
+    g.gain.exponentialRampToValueAtTime(0.0001, start+dur);
+    filt.connect(g); g.connect(masterGain);
+    const o = audioCtx.createOscillator();
+    o.type='triangle'; o.frequency.value=freq;
+    o.connect(filt); o.start(start); o.stop(start+dur+0.05);
+    const o2 = audioCtx.createOscillator();
+    o2.type='sine'; o2.frequency.value=freq*2;
+    const g2 = audioCtx.createGain(); g2.gain.value=0.15;
+    o2.connect(g2); g2.connect(filt);
+    o2.start(start); o2.stop(start+dur*0.5+0.05);
   }
+
+  function playBass(freq, start, dur){
+    const g = audioCtx.createGain();
+    g.gain.setValueAtTime(0.0001, start);
+    g.gain.exponentialRampToValueAtTime(0.35, start+0.05);
+    g.gain.exponentialRampToValueAtTime(0.0001, start+dur);
+    g.connect(masterGain);
+    const o = audioCtx.createOscillator();
+    o.type='sine'; o.frequency.value=freq;
+    o.connect(g); o.start(start); o.stop(start+dur+0.05);
+  }
+
+  function startVinylNoise(){
+    const bufSize = audioCtx.sampleRate * 2;
+    const buf = audioCtx.createBuffer(1, bufSize, audioCtx.sampleRate);
+    const data = buf.getChannelData(0);
+    for(let i=0;i<bufSize;i++) data[i] = (Math.random()*2-1)*0.5;
+    noiseSrc = audioCtx.createBufferSource();
+    noiseSrc.buffer = buf; noiseSrc.loop = true;
+    const filt = audioCtx.createBiquadFilter();
+    filt.type='bandpass'; filt.frequency.value=3000; filt.Q.value=0.6;
+    const g = audioCtx.createGain(); g.gain.value=0.02;
+    noiseSrc.connect(filt); filt.connect(g); g.connect(masterGain);
+    noiseSrc.start();
+  }
+
   function scheduleLoop(startTime){
-    let t = startTime;
-    MELODY.forEach(note=>{ playNote(note.n, t, note.d*0.92); t += note.d; });
-    return t - startTime;
+    const barDur = BEAT*4;
+    CHORDS.forEach((chord, bar)=>{
+      const barStart = startTime + bar*barDur;
+      playBass(chord.root, barStart, barDur*0.95);
+      chord.notes.forEach(n => playPad(n, barStart, barDur*0.95, 0.11));
+      for(let beat=0; beat<4; beat++){
+        playPluck(MELODY[bar*4+beat], barStart + beat*BEAT, BEAT*0.9);
+      }
+    });
+    return barDur*CHORDS.length;
   }
+
   function loopForever(){
     if(!playing) return;
-    const dur = scheduleLoop(audioCtx.currentTime + 0.05);
-    loopTimeoutId = setTimeout(loopForever, Math.max(300, dur*1000 - 60));
+    const dur = scheduleLoop(audioCtx.currentTime + 0.08);
+    loopTimeoutId = setTimeout(loopForever, Math.max(300, dur*1000 - 80));
   }
   function start(){
     ensureCtx();
     if(audioCtx.state==='suspended') audioCtx.resume();
+    if(!noiseSrc) startVinylNoise();
     playing = true; btn.textContent='🔊'; loopForever();
   }
   function stop(){
