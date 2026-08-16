@@ -463,67 +463,91 @@ if(sp500Total>0){
     `💡 서로 다른 상품(KODEX 미국S&P500, SPY)이지만 둘 다 S&amp;P500 지수를 추종해요 — 가족 전체로 보면 S&amp;P500 계열에만 <b class="num">${won(sp500Total)}</b>이 들어가 있어요.`;
 }
 
-// ── 과거 순자산 추이 (가독성 개선판: y축 그리드, 겹침 방지, 반응형 비율) ──
-(function drawTrend(){
+// ── 순자산 추이 (실제 과거 + 시뮬레이터 기반 미래 예상선, 글자 크게) ──
+function renderTrendChart(){
   const dates = Array.from(new Set(flat.map(r=>r.date))).sort();
-  const points = dates.map(d=>{
+  const histPoints = dates.map(d=>{
     const upTo = flat.filter(r=>r.date<=d);
     const map = new Map();
     upTo.slice().sort((a,b)=>a.date.localeCompare(b.date)).forEach(r=>{
       map.set(r.member+"|"+r.institution+"|"+r.name, r.balance);
     });
-    return {date:d, net: Array.from(map.values()).reduce((s,v)=>s+v,0)};
+    const parts = d.split('-');
+    return { label: parts[1]+'/'+parts[2], net: Array.from(map.values()).reduce((s,v)=>s+v,0) };
   });
+  const H = histPoints.length;
 
-  const w=820, h=300, padL=66, padR=20, padT=26, padB=40;
+  const FUTURE_YEARS = [1,3,5,7,10];
+  const futPoints = (typeof simulate === 'function')
+    ? FUTURE_YEARS.map(yy => ({ label:'+'+yy+'년', net: simulate(yy,0,0).total }))
+    : [];
+  const F = futPoints.length;
+
+  const w=820, h=340, padL=78, padR=20, padT=36, padB=48;
   const plotW = w-padL-padR, plotH = h-padT-padB;
-  const vals = points.map(p=>p.net);
-  const rawMin = Math.min(...vals), rawMax = Math.max(...vals);
-  const span = (rawMax-rawMin) || Math.abs(rawMax)*0.1 || 1;
-  const min = rawMin - span*0.18, max = rawMax + span*0.18;
-  const range = (max-min) || 1;
+  const splitX = F>0 ? (padL + plotW*0.4) : (padL+plotW);
 
-  const x = i => padL + (points.length===1 ? plotW/2 : i*(plotW/(points.length-1)));
+  const allVals = histPoints.concat(futPoints).map(p=>p.net);
+  const rawMin = Math.min(...allVals), rawMax = Math.max(...allVals);
+  const span = (rawMax-rawMin) || Math.abs(rawMax)*0.1 || 1;
+  const min = rawMin - span*0.15, max = rawMax + span*0.15;
+  const range = (max-min) || 1;
   const y = v => padT + plotH - ((v-min)/range)*plotH;
+
+  const histX = i => H<=1 ? splitX : padL + i*((splitX-padL)/(H-1));
+  const futX = i => splitX + (i+1)*(((padL+plotW)-splitX)/F);
 
   const GRID_N = 4;
   let gridLines = '';
   for(let g=0; g<=GRID_N; g++){
     const v = min + (range*g/GRID_N);
     const yy = y(v);
-    gridLines += `<line x1="${padL}" y1="${yy}" x2="${w-padR}" y2="${yy}" stroke="var(--line)" stroke-width="1"/>
-      <text x="${padL-10}" y="${yy+4}" font-size="10" text-anchor="end" fill="var(--sub)" class="num">${(v/100000000).toFixed(1)}억</text>`;
+    gridLines += `<line x1="${padL}" y1="${yy}" x2="${padL+plotW}" y2="${yy}" stroke="var(--line)" stroke-width="1"/>
+      <text x="${padL-12}" y="${yy+5}" font-size="13" text-anchor="end" fill="var(--sub)" class="num">${(v/100000000).toFixed(1)}억</text>`;
   }
 
-  const path = points.map((p,i)=> (i===0?'M':'L')+x(i)+','+y(p.net)).join(' ');
-  const areaPath = path + ` L${x(points.length-1)},${padT+plotH} L${x(0)},${padT+plotH} Z`;
+  const histPath = histPoints.map((p,i)=>(i===0?'M':'L')+histX(i)+','+y(p.net)).join(' ');
+  const histArea = histPath + ` L${histX(H-1)},${padT+plotH} L${histX(0)},${padT+plotH} Z`;
+  const futPath = F>0
+    ? `M${histX(H-1)},${y(histPoints[H-1].net)} ` + futPoints.map((p,i)=>`L${futX(i)},${y(p.net)}`).join(' ')
+    : '';
 
   const maxLabels = 7;
-  const step = Math.max(1, Math.ceil(points.length/maxLabels));
-
+  const step = Math.max(1, Math.ceil(H/maxLabels));
   let dots='', xlabels='';
-  points.forEach((p,i)=>{
-    const px=x(i), py=y(p.net);
-    const labelAbove = (py - 16) > (padT+8);
-    const labelY = labelAbove ? py-14 : py+20;
-    dots += `<circle cx="${px}" cy="${py}" r="4.5" fill="var(--accent)" stroke="var(--ink2)" stroke-width="2"/>
-      <text x="${px}" y="${labelY}" font-size="11" text-anchor="middle" fill="var(--text)" class="num" style="font-weight:700">${(p.net/100000000).toFixed(2)}억</text>`;
-    if(i % step === 0 || i===points.length-1){
-      const parts = p.date.split('-');
-      xlabels += `<text x="${px}" y="${h-14}" font-size="10" text-anchor="middle" fill="var(--sub)">${parts[1]}/${parts[2]}</text>`;
+  histPoints.forEach((p,i)=>{
+    const px=histX(i), py=y(p.net);
+    const above = (py-26) > (padT+8);
+    const labelY = above ? py-18 : py+28;
+    dots += `<circle cx="${px}" cy="${py}" r="5" fill="var(--accent)" stroke="var(--ink2)" stroke-width="2.5"/>
+      <text x="${px}" y="${labelY}" font-size="15" text-anchor="middle" fill="var(--text)" class="num" style="font-weight:800">${(p.net/100000000).toFixed(2)}억</text>`;
+    if(i % step === 0 || i===H-1){
+      xlabels += `<text x="${px}" y="${h-18}" font-size="12" text-anchor="middle" fill="var(--sub)">${p.label}</text>`;
     }
   });
+  futPoints.forEach((p,i)=>{
+    const px=futX(i), py=y(p.net);
+    const above = (py-26) > (padT+8);
+    const labelY = above ? py-18 : py+28;
+    dots += `<circle cx="${px}" cy="${py}" r="4.5" fill="var(--ink2)" stroke="var(--accent)" stroke-width="2"/>
+      <text x="${px}" y="${labelY}" font-size="13" text-anchor="middle" fill="var(--sub)" class="num" style="font-weight:700">${(p.net/100000000).toFixed(1)}억</text>`;
+    xlabels += `<text x="${px}" y="${h-18}" font-size="11" text-anchor="middle" fill="var(--sub)">${p.label}</text>`;
+  });
 
-  const first = points[0].net, last = points[points.length-1].net;
+  const nowMarker = F>0 ? `<line x1="${splitX}" y1="${padT}" x2="${splitX}" y2="${padT+plotH}" stroke="var(--sub)" stroke-dasharray="2 4" opacity="0.55"/>
+    <text x="${splitX}" y="${padT-12}" font-size="11" text-anchor="middle" fill="var(--sub)">오늘</text>` : '';
+
+  const first = histPoints[0].net, last = histPoints[H-1].net;
   const change = last-first;
   const changePct = first!==0 ? (change/Math.abs(first)*100) : 0;
   const changeColor = change>=0 ? 'var(--jade)' : 'var(--rust)';
   const sign = change>=0 ? '+' : '';
+  const futLast = futPoints[futPoints.length-1];
 
   document.getElementById('trendChart').innerHTML = `
-    <div style="display:flex; justify-content:space-between; align-items:baseline; margin-bottom:10px; flex-wrap:wrap; gap:8px; font-size:12px; color:var(--sub);">
-      <span>${points[0].date} ~ ${points[points.length-1].date} (${points.length}개 시점)</span>
-      <span class="num" style="font-weight:700; color:${changeColor}; font-size:13px;">${sign}${won(change)} (${sign}${changePct.toFixed(1)}%)</span>
+    <div style="display:flex; justify-content:space-between; align-items:baseline; margin-bottom:10px; flex-wrap:wrap; gap:8px; font-size:13px; color:var(--sub);">
+      <span>${dates[0]} ~ ${dates[dates.length-1]} 실제 (${H}개 시점)${futLast?` · +${FUTURE_YEARS[FUTURE_YEARS.length-1]}년 후 예상 <b class="num" style="color:var(--text)">${(futLast.net/100000000).toFixed(1)}억</b>`:''}</span>
+      <span class="num" style="font-weight:700; color:${changeColor}; font-size:15px;">${sign}${won(change)} (${sign}${changePct.toFixed(1)}%)</span>
     </div>
     <svg viewBox="0 0 ${w} ${h}" width="100%" style="display:block;" preserveAspectRatio="xMidYMid meet">
       <defs><linearGradient id="areaFill" x1="0" y1="0" x2="0" y2="1">
@@ -531,12 +555,16 @@ if(sp500Total>0){
         <stop offset="100%" stop-color="var(--accent)" stop-opacity="0"/>
       </linearGradient></defs>
       ${gridLines}
-      <path d="${areaPath}" fill="url(#areaFill)" stroke="none"/>
-      <path d="${path}" fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+      <path d="${histArea}" fill="url(#areaFill)" stroke="none"/>
+      <path d="${histPath}" fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+      ${futPath ? `<path d="${futPath}" fill="none" stroke="var(--accent)" stroke-width="2" stroke-dasharray="6 5" opacity="0.6" stroke-linejoin="round" stroke-linecap="round"/>` : ''}
+      ${nowMarker}
       ${dots}
       ${xlabels}
-    </svg>`;
-})();
+    </svg>
+    ${F>0 ? `<div class="howto" style="margin-top:12px;">점선 구간(오늘 이후)은 미래 시뮬레이터의 기본 가정(부동산→주식 이동 0원, 추가저축 0원, 자산유형별 실제 통계 성장률)으로 계산한 참고용 예상선이에요. 아래 시뮬레이터 슬라이더로 다른 시나리오도 직접 계산해보세요.</div>` : ''}
+  `;
+}
 
 // ── 미래 자산 시뮬레이터 (인터랙티브, 자산유형별 실제 통계 기반 성장률) ──
 const GROWTH_RATES = {
@@ -628,6 +656,7 @@ simYear.oninput = updateSim;
 simMove.oninput = updateSim;
 simContrib.oninput = updateSim;
 updateSim();
+renderTrendChart();
 
 // ── 계좌별 상세 테이블 ──
 const fMember = document.getElementById('fMember');
