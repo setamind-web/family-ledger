@@ -231,6 +231,7 @@
 </div>
 
 <button class="music-btn" id="musicToggle" aria-label="배경음악 재생/정지">🎵</button>
+<audio id="bgmAudio" src="audio/bgm-cafe.mp3" loop preload="none"></audio>
 
 <script>
 const DATA = {
@@ -615,153 +616,16 @@ fMember.onchange = renderTable;
 fCategory.onchange = renderTable;
 renderTable();
 
-// ── 배경음악 (러블리 카페 로파이, Web Audio API로 직접 작곡 — 저작권 없음) ──
+// ── 배경음악 (사용자 제공 mp3) ──
 (function music(){
-  const TEMPO = 92;
-  const BEAT = 60/TEMPO;
-  // Cmaj7-Am7-Fmaj7-G7-Em7-Am7-Dm7-G7 : 8마디 재즈 카페 진행 (I-vi-IV-V / iii-vi-ii-V)
-  const CHORDS = [
-    { root: 130.81, notes: [261.63, 329.63, 392.00, 493.88] }, // Cmaj7
-    { root: 110.00, notes: [220.00, 261.63, 329.63, 392.00] }, // Am7
-    { root: 87.31,  notes: [174.61, 220.00, 261.63, 329.63] }, // Fmaj7
-    { root: 98.00,  notes: [196.00, 246.94, 293.66, 349.23] }, // G7
-    { root: 82.41,  notes: [164.81, 196.00, 246.94, 293.66] }, // Em7
-    { root: 110.00, notes: [220.00, 261.63, 329.63, 392.00] }, // Am7
-    { root: 73.42,  notes: [146.83, 174.61, 220.00, 261.63] }, // Dm7
-    { root: 98.00,  notes: [196.00, 246.94, 293.66, 349.23] }  // G7
-  ];
-  const MELODY = [
-    329.63,392.00,440.00,392.00,   // Cmaj7: E G A G
-    329.63,261.63,329.63,440.00,   // Am7:   E C E A
-    440.00,349.23,440.00,523.25,   // Fmaj7: A F A C5
-    493.88,587.33,493.88,392.00,   // G7:    B D5 B G
-    392.00,493.88,587.33,493.88,   // Em7:   G B D5 B
-    523.25,440.00,329.63,440.00,   // Am7:   C5 A E A
-    349.23,440.00,587.33,523.25,   // Dm7:   F A D5 C5
-    493.88,440.00,392.00,293.66    // G7:    B A G D
-  ];
-
-  let audioCtx=null, masterGain=null, playing=false, loopTimeoutId=null, noiseSrc=null;
   const btn = document.getElementById('musicToggle');
-
-  function ensureCtx(){
-    if(!audioCtx){
-      audioCtx = new (window.AudioContext||window.webkitAudioContext)();
-      masterGain = audioCtx.createGain();
-      masterGain.gain.value = 0.3;
-      masterGain.connect(audioCtx.destination);
-    }
-  }
-
-  function playPad(freq, start, dur, vol){
-    const filt = audioCtx.createBiquadFilter();
-    filt.type='lowpass'; filt.frequency.value=1800; filt.Q.value=0.5;
-    const g = audioCtx.createGain();
-    g.gain.setValueAtTime(0.0001, start);
-    g.gain.exponentialRampToValueAtTime(vol, start+0.25);
-    g.gain.exponentialRampToValueAtTime(0.0001, start+dur);
-    filt.connect(g); g.connect(masterGain);
-    [1, 1.003, 2].forEach((mult, i)=>{
-      const o = audioCtx.createOscillator();
-      o.type = i===2 ? 'triangle' : 'sine';
-      o.frequency.value = freq*mult;
-      const og = audioCtx.createGain();
-      og.gain.value = i===2 ? 0.12 : 0.5;
-      o.connect(og); og.connect(filt);
-      o.start(start); o.stop(start+dur+0.1);
-    });
-  }
-
-  function playPluck(freq, start, dur){
-    const filt = audioCtx.createBiquadFilter();
-    filt.type='lowpass'; filt.frequency.value=2600; filt.Q.value=1.2;
-    const g = audioCtx.createGain();
-    g.gain.setValueAtTime(0.0001, start);
-    g.gain.exponentialRampToValueAtTime(0.5, start+0.008);
-    g.gain.exponentialRampToValueAtTime(0.0001, start+dur);
-    filt.connect(g); g.connect(masterGain);
-    const o = audioCtx.createOscillator();
-    o.type='triangle'; o.frequency.value=freq;
-    o.connect(filt); o.start(start); o.stop(start+dur+0.05);
-    const o2 = audioCtx.createOscillator();
-    o2.type='sine'; o2.frequency.value=freq*2;
-    const g2 = audioCtx.createGain(); g2.gain.value=0.15;
-    o2.connect(g2); g2.connect(filt);
-    o2.start(start); o2.stop(start+dur*0.5+0.05);
-  }
-
-  function playBass(freq, start, dur){
-    const g = audioCtx.createGain();
-    g.gain.setValueAtTime(0.0001, start);
-    g.gain.exponentialRampToValueAtTime(0.35, start+0.05);
-    g.gain.exponentialRampToValueAtTime(0.0001, start+dur);
-    g.connect(masterGain);
-    const o = audioCtx.createOscillator();
-    o.type='sine'; o.frequency.value=freq;
-    o.connect(g); o.start(start); o.stop(start+dur+0.05);
-  }
-
-  function startVinylNoise(){
-    const bufSize = audioCtx.sampleRate * 2;
-    const buf = audioCtx.createBuffer(1, bufSize, audioCtx.sampleRate);
-    const data = buf.getChannelData(0);
-    for(let i=0;i<bufSize;i++) data[i] = (Math.random()*2-1)*0.5;
-    noiseSrc = audioCtx.createBufferSource();
-    noiseSrc.buffer = buf; noiseSrc.loop = true;
-    const filt = audioCtx.createBiquadFilter();
-    filt.type='bandpass'; filt.frequency.value=3000; filt.Q.value=0.6;
-    const g = audioCtx.createGain(); g.gain.value=0.02;
-    noiseSrc.connect(filt); filt.connect(g); g.connect(masterGain);
-    noiseSrc.start();
-  }
-
-  function playHihat(start){
-    const bufSize = Math.floor(audioCtx.sampleRate * 0.05);
-    const buf = audioCtx.createBuffer(1, bufSize, audioCtx.sampleRate);
-    const data = buf.getChannelData(0);
-    for(let i=0;i<bufSize;i++) data[i] = Math.random()*2-1;
-    const src = audioCtx.createBufferSource(); src.buffer = buf;
-    const filt = audioCtx.createBiquadFilter();
-    filt.type='highpass'; filt.frequency.value=6500;
-    const g = audioCtx.createGain();
-    g.gain.setValueAtTime(0.0001, start);
-    g.gain.exponentialRampToValueAtTime(0.055, start+0.003);
-    g.gain.exponentialRampToValueAtTime(0.0001, start+0.05);
-    src.connect(filt); filt.connect(g); g.connect(masterGain);
-    src.start(start); src.stop(start+0.06);
-  }
-
-  function scheduleLoop(startTime){
-    const barDur = BEAT*4;
-    CHORDS.forEach((chord, bar)=>{
-      const barStart = startTime + bar*barDur;
-      playBass(chord.root, barStart, barDur*0.95);
-      chord.notes.forEach(n => playPad(n, barStart, barDur*0.95, 0.11));
-      for(let beat=0; beat<4; beat++){
-        playPluck(MELODY[bar*4+beat], barStart + beat*BEAT, BEAT*0.9);
-      }
-      [1.5, 3.5].forEach(pos => playHihat(barStart + pos*BEAT));
-    });
-    return barDur*CHORDS.length;
-  }
-
-  function loopForever(){
-    if(!playing) return;
-    const dur = scheduleLoop(audioCtx.currentTime + 0.08);
-    loopTimeoutId = setTimeout(loopForever, Math.max(300, dur*1000 - 80));
-  }
-  function start(){
-    ensureCtx();
-    if(audioCtx.state==='suspended') audioCtx.resume();
-    if(!noiseSrc) startVinylNoise();
-    playing = true; btn.textContent='🔊'; loopForever();
-  }
-  function stop(){
-    playing = false; btn.textContent='🎵';
-    if(loopTimeoutId) clearTimeout(loopTimeoutId);
-    if(audioCtx) audioCtx.suspend();
-  }
-  btn.onclick = ()=>{ playing ? stop() : start(); };
+  const audio = document.getElementById('bgmAudio');
+  audio.volume = 0.5;
+  let playing = false;
+  btn.onclick = ()=>{
+    if(playing){ audio.pause(); playing=false; btn.textContent='🎵'; }
+    else{ audio.play(); playing=true; btn.textContent='🔊'; }
+  };
 })();
 </script>
 </body>
