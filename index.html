@@ -463,7 +463,10 @@ if(sp500Total>0){
     `💡 서로 다른 상품(KODEX 미국S&P500, SPY)이지만 둘 다 S&amp;P500 지수를 추종해요 — 가족 전체로 보면 S&amp;P500 계열에만 <b class="num">${won(sp500Total)}</b>이 들어가 있어요.`;
 }
 
-// ── 순자산 추이 (실제 과거 + 시뮬레이터 기반 미래 예상선, 글자 크게) ──
+// ── 순자산 추이 (실제 과거 + 시뮬레이터 기반 미래 예상선, 슬라이더 움직이면 부드럽게 애니메이션) ──
+let trendPrevFutureNets = null;
+let trendAnimId = null;
+
 function renderTrendChart(){
   const dates = Array.from(new Set(flat.map(r=>r.date))).sort();
   const histPoints = dates.map(d=>{
@@ -475,24 +478,46 @@ function renderTrendChart(){
     const parts = d.split('-');
     return { label: parts[1]+'/'+parts[2], net: Array.from(map.values()).reduce((s,v)=>s+v,0) };
   });
-  const H = histPoints.length;
 
   const FUTURE_YEARS = [1,3,5,7,10];
   const liveMove = (typeof simMove !== 'undefined') ? +simMove.value : 0;
   const liveContrib = (typeof simContrib !== 'undefined') ? +simContrib.value : 0;
-  const futPoints = (typeof simulate === 'function')
-    ? FUTURE_YEARS.map(yy => ({ label:'+'+yy+'년', net: simulate(yy,liveMove,liveContrib).total }))
+  const targetNets = (typeof simulate === 'function')
+    ? FUTURE_YEARS.map(yy => simulate(yy,liveMove,liveContrib).total)
     : [];
+
+  const startNets = (trendPrevFutureNets && trendPrevFutureNets.length===targetNets.length)
+    ? trendPrevFutureNets.slice() : targetNets.slice();
+
+  const scaleVals = histPoints.map(p=>p.net).concat(startNets, targetNets);
+  const rawMin = Math.min(...scaleVals), rawMax = Math.max(...scaleVals);
+  const span = (rawMax-rawMin) || Math.abs(rawMax)*0.1 || 1;
+  const scaleMin = rawMin - span*0.15, scaleMax = rawMax + span*0.15;
+
+  if(trendAnimId) cancelAnimationFrame(trendAnimId);
+  const duration = 550;
+  const t0 = performance.now();
+  const ease = t => 1 - Math.pow(1-t, 3);
+
+  function frame(now){
+    const p = Math.min(1, (now-t0)/duration);
+    const e = ease(p);
+    const currentNets = targetNets.map((v,i)=> startNets[i] + (v-startNets[i])*e);
+    drawTrendSVG(dates, histPoints, FUTURE_YEARS, currentNets, scaleMin, scaleMax, liveMove, liveContrib);
+    if(p<1){ trendAnimId = requestAnimationFrame(frame); }
+    else { trendPrevFutureNets = targetNets.slice(); trendAnimId = null; }
+  }
+  trendAnimId = requestAnimationFrame(frame);
+}
+
+function drawTrendSVG(dates, histPoints, FUTURE_YEARS, futureNets, min, max, liveMove, liveContrib){
+  const H = histPoints.length;
+  const futPoints = FUTURE_YEARS.map((yy,i)=>({ label:'+'+yy+'년', net: futureNets[i] }));
   const F = futPoints.length;
 
   const w=820, h=340, padL=78, padR=20, padT=36, padB=48;
   const plotW = w-padL-padR, plotH = h-padT-padB;
   const splitX = F>0 ? (padL + plotW*0.4) : (padL+plotW);
-
-  const allVals = histPoints.concat(futPoints).map(p=>p.net);
-  const rawMin = Math.min(...allVals), rawMax = Math.max(...allVals);
-  const span = (rawMax-rawMin) || Math.abs(rawMax)*0.1 || 1;
-  const min = rawMin - span*0.15, max = rawMax + span*0.15;
   const range = (max-min) || 1;
   const y = v => padT + plotH - ((v-min)/range)*plotH;
 
@@ -531,7 +556,7 @@ function renderTrendChart(){
     const px=futX(i), py=y(p.net);
     const above = (py-26) > (padT+8);
     const labelY = above ? py-18 : py+28;
-    dots += `<circle cx="${px}" cy="${py}" r="4.5" fill="var(--ink2)" stroke="var(--accent)" stroke-width="2"/>
+    dots += `<circle cx="${px}" cy="${py}" r="5.5" fill="var(--accent)" stroke="var(--ink2)" stroke-width="2.5"/>
       <text x="${px}" y="${labelY}" font-size="13" text-anchor="middle" fill="var(--sub)" class="num" style="font-weight:700">${(p.net/100000000).toFixed(1)}억</text>`;
     xlabels += `<text x="${px}" y="${h-18}" font-size="11" text-anchor="middle" fill="var(--sub)">${p.label}</text>`;
   });
@@ -559,12 +584,12 @@ function renderTrendChart(){
       ${gridLines}
       <path d="${histArea}" fill="url(#areaFill)" stroke="none"/>
       <path d="${histPath}" fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
-      ${futPath ? `<path d="${futPath}" fill="none" stroke="var(--accent)" stroke-width="2" stroke-dasharray="6 5" opacity="0.6" stroke-linejoin="round" stroke-linecap="round"/>` : ''}
+      ${futPath ? `<path d="${futPath}" fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-dasharray="6 5" opacity="0.85" stroke-linejoin="round" stroke-linecap="round"/>` : ''}
       ${nowMarker}
       ${dots}
       ${xlabels}
     </svg>
-    ${F>0 ? `<div class="howto" style="margin-top:12px;">점선 구간(오늘 이후)은 자산유형별 실제 통계 성장률에 <b>지금 아래 슬라이더 설정</b>(부동산→주식 이동 ${won(liveMove)}, 연간 추가저축 ${won(liveContrib)})을 반영한 예상선이에요 — 슬라이더를 움직이면 이 그래프도 같이 바뀝니다.</div>` : ''}
+    ${F>0 ? `<div class="howto" style="margin-top:12px;">점선 구간(오늘 이후)은 자산유형별 실제 통계 성장률에 <b>지금 아래 슬라이더 설정</b>(부동산→주식 이동 ${won(liveMove)}, 연간 추가저축 ${won(liveContrib)})을 반영한 예상선이에요 — 슬라이더를 움직이면 이 그래프가 부드럽게 움직여요.</div>` : ''}
   `;
 }
 
