@@ -466,6 +466,7 @@ if(sp500Total>0){
 // ── 순자산 추이 (실제 과거 + 시뮬레이터 기반 미래 예상선, 슬라이더 움직이면 부드럽게 애니메이션) ──
 let trendPrevFutureNets = null;
 let trendAnimId = null;
+let FIXED_TREND_MIN = null, FIXED_TREND_MAX = null;
 
 function renderTrendChart(){
   const dates = Array.from(new Set(flat.map(r=>r.date))).sort();
@@ -489,10 +490,15 @@ function renderTrendChart(){
   const startNets = (trendPrevFutureNets && trendPrevFutureNets.length===targetNets.length)
     ? trendPrevFutureNets.slice() : targetNets.slice();
 
-  const scaleVals = histPoints.map(p=>p.net).concat(startNets, targetNets);
-  const rawMin = Math.min(...scaleVals), rawMax = Math.max(...scaleVals);
-  const span = (rawMax-rawMin) || Math.abs(rawMax)*0.1 || 1;
-  const scaleMin = rawMin - span*0.15, scaleMax = rawMax + span*0.15;
+  if(FIXED_TREND_MIN===null && typeof simulate === 'function'){
+    const histVals = histPoints.map(p=>p.net);
+    const worstCase = Math.min(...histVals, targetNets[0]!==undefined?targetNets[0]:histVals[0]);
+    const bestCase = simulate(10, +simMove.max, +simContrib.max).total;
+    const span0 = (bestCase-worstCase) || Math.abs(bestCase)*0.1 || 1;
+    FIXED_TREND_MIN = worstCase - span0*0.08;
+    FIXED_TREND_MAX = bestCase + span0*0.08;
+  }
+  const scaleMin = FIXED_TREND_MIN, scaleMax = FIXED_TREND_MAX;
 
   if(trendAnimId) cancelAnimationFrame(trendAnimId);
   const duration = 550;
