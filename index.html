@@ -376,6 +376,25 @@ flat.slice().sort((a,b)=> a.date.localeCompare(b.date)).forEach(r=>{
 });
 const current = Array.from(latestMap.values());
 
+// ── 일일 시세 반영: 주식/가상자산 보유종목을 최신 시장가 기준으로 스케일 ──
+// 매일 클라우드 스케줄러가 MARKET_LIVE만 갱신함. MARKET_ANCHOR는 이 기능 도입 기준일 값으로 고정.
+const MARKET_ANCHOR = { date: "2026-08-23", spy: 767.00, btcKrw: 106570000 };
+const MARKET_LIVE   = { date: "2026-08-23", spy: 767.00, btcKrw: 106570000 };
+const marketRatio = { equity: MARKET_LIVE.spy / MARKET_ANCHOR.spy, crypto: MARKET_LIVE.btcKrw / MARKET_ANCHOR.btcKrw };
+current.forEach(r=>{
+  if(r.balance<0) return;
+  if(r.category!=='투자' && r.category!=='연금') return;
+  if(r.holdings && r.holdings.length){
+    r.holdings = r.holdings.map(h=>{
+      const ratio = marketRatio[classifyHolding(h.name)] || 1;
+      return ratio===1 ? h : { name:h.name, value: Math.round(h.value*ratio) };
+    });
+    r.balance = r.holdings.reduce((s,h)=>s+h.value,0);
+  } else {
+    r.balance = Math.round(r.balance * marketRatio.equity);
+  }
+});
+
 function memberShares(row){
   if(row.member.startsWith("공동")){
     return [{member:"아빠", balance:row.balance/2},{member:"엄마", balance:row.balance/2}];
@@ -401,7 +420,7 @@ document.getElementById('totalAssets').textContent = won(totalAsset);
 document.getElementById('totalDebt').textContent = won(totalDebt);
 
 const lastDate = current.map(r=>r.date).sort().slice(-1)[0];
-document.getElementById('updated').textContent = "마지막 반영 " + lastDate + " · 구성원 " + members.length + "명";
+document.getElementById('updated').textContent = "마지막 반영 " + lastDate + " · 시세 갱신 " + MARKET_LIVE.date + " · 구성원 " + members.length + "명";
 
 const mc = document.getElementById('memberCards');
 members.forEach(m=>{
