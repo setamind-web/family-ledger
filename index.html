@@ -112,6 +112,37 @@
   .callout{margin-top:14px; font-size:12.5px; color:var(--accent); background:color-mix(in srgb, var(--accent) 12%, transparent);
     border-radius:12px; padding:10px 14px;}
 
+  /* 보유수량 */
+  .qty-summary{background:linear-gradient(160deg,var(--ink3),var(--ink2)); border:1px solid var(--line);
+    border-radius:16px; padding:16px 18px; margin-bottom:14px;}
+  .qty-summary .top{display:flex; justify-content:space-between; align-items:baseline; gap:12px; flex-wrap:wrap;}
+  .qty-summary .top span{font-size:12.5px; color:var(--sub);}
+  .qty-summary .top b{font-family:'Noto Serif KR','Nanum Myeongjo',ui-serif,Georgia,serif; font-size:23px; color:var(--accent);}
+  .chips{display:flex; flex-wrap:wrap; gap:6px 8px; margin-top:12px;}
+  .chip{background:var(--ink2); border:1px solid var(--line); border-radius:999px; padding:4px 11px; font-size:11.5px; color:var(--sub);}
+  .chip b{color:var(--text); font-weight:700;}
+
+  .qty-card{background:var(--ink3); border-radius:14px; padding:14px 16px; margin-bottom:10px;}
+  .qty-top{display:flex; justify-content:space-between; align-items:flex-start; gap:14px; flex-wrap:wrap;}
+  .qty-top .nm{font-size:13.5px; font-weight:700; line-height:1.45; flex:1 1 200px;}
+  .qty-top .rt{text-align:right; white-space:nowrap;}
+  .qty-big{font-size:21px; font-weight:800; color:var(--accent); line-height:1.15;}
+  .qty-meta{font-size:11.5px; color:var(--sub); margin-top:5px; line-height:1.6;}
+  .qty-rows{margin-top:10px;}
+  .qty-row{display:grid; grid-template-columns:minmax(130px,auto) 1fr; gap:3px 14px; align-items:baseline;
+    padding:6px 0; font-size:11.5px; color:var(--sub); border-top:1px dashed var(--line);}
+  .qty-row .r{text-align:right;}
+  @media (max-width:620px){ .qty-row{grid-template-columns:1fr;} .qty-row .r{text-align:left;} }
+  .qty-trend{margin-top:9px; font-size:11.5px; color:var(--sub); background:var(--ink2);
+    border-radius:10px; padding:8px 12px; line-height:1.7;}
+  .pill{background:var(--ink2); border-radius:6px; padding:1px 6px; font-size:10.5px; opacity:.85;}
+  .qty-row .pill{background:var(--ink);}
+  .jade{color:var(--jade);} .rustc{color:var(--rust);}
+  .warnbox{background:color-mix(in srgb, var(--pension) 15%, transparent);
+    border:1px solid color-mix(in srgb, var(--pension) 40%, transparent);
+    border-radius:12px; padding:11px 14px; font-size:12px; color:var(--text); margin-bottom:14px; line-height:1.65;}
+  .warnbox b{color:var(--pension);}
+
   /* simulator */
   .sim-row{margin-bottom:20px;}
   .sim-row .row-head{display:flex; justify-content:space-between; font-size:13px; color:var(--sub); margin-bottom:8px;}
@@ -171,9 +202,26 @@
   <section class="panel">
     <h2>📦 가족 합산 보유 종목</h2>
     <div id="holdingsList"></div>
-    <div class="callout" id="sp500Callout"></div>
+    <div class="callout">💡 S&amp;P500을 따라가는 상품이 계좌마다 다른 이름(KODEX·TIGER·SPY)으로 흩어져 있어요.
+      이름이 달라도 결국 같은 지수라서, <b>한데 묶은 금액과 보유수량은 아래 「종목별 보유수량 · 평단가」 칸</b>에 정리해뒀습니다.</div>
     <div class="howto" style="margin-top:14px;">
-      아빠 명의 NH증권 계좌 등 일부는 계좌 개요 화면만 확인돼서 세부 종목이 아직 안 나뉘어 있어요 (표에 "미분류"로 표시). 계좌 상세(보유종목) 화면 스크린샷을 주시면 더 세밀하게 나눠드릴게요.
+      이 표는 <b>가장 최근 잔액</b>을 기준으로 묶은 거예요. 계좌 개요 화면만 확인된 계좌는 "미분류"로 나옵니다.
+      종목별 <b>보유수량과 평단가</b>는 바로 아래 칸에서 따로 보실 수 있어요.
+    </div>
+  </section>
+
+  <section class="panel">
+    <h2>🔢 종목별 보유수량 · 평단가</h2>
+    <div id="qtySummary"></div>
+    <div id="qtyStale"></div>
+    <div id="qtyChanges"></div>
+    <div id="qtyList"></div>
+    <div id="qtyUnknown"></div>
+    <div class="howto" style="margin-top:14px;">
+      <b>왜 수량을 따로 적어두나요?</b> 평가금액만 보면 돈이 늘었을 때 <b>더 샀는지</b> <b>가격이 올랐는지</b> 구분이 안 돼요.
+      수량(주·좌)을 같이 남겨두면 <span class="num">평가금액 = 수량 × 단가</span>로 쪼갤 수 있어서, 다음 스크린샷이 들어오는 순간
+      "이번 증가분 중 얼마가 시세 덕이고 얼마가 추가매수인지"가 자동으로 갈라집니다.
+      평단가와 단가는 저장된 값이 아니라 <b>평가금액·평가손익·수량에서 계산</b>한 값이에요.
     </div>
   </section>
 
@@ -225,6 +273,7 @@
 
   <div class="howto">
     <b>업데이트 방법</b> — 새 스크린샷은 가장에게 보내주시면 반영 후 이 페이지 파일을 다시 올려드립니다. 링크 주소는 바뀌지 않아요.
+    증권사 앱에서 <b>보유수량이 보이는 화면</b>(잔고 상세)을 찍어주시면 수량·평단가까지 같이 따라갑니다.
   </div>
   <footer class="priv">가족 재정 정보를 포함한 개인 페이지입니다. 링크를 아는 사람은 열람할 수 있으니 외부 공유는 주의해주세요.</footer>
 </div>
@@ -250,25 +299,25 @@ const DATA = {
       "date": "2026-08-15", "member": "아빠", "source": "screenshots/KakaoTalk_20260815_221951131.jpg",
       "accounts": [
         { "category": "투자", "institution": "토스 내투자 (연결계좌 종합)", "name": "국내·해외 주식 + 기타투자 + 예수금", "balance": 337959174,
-          "note": "총 투자자산 742,688,596원 중 장모님 명의를 대신 운용 중인 자금 404,729,422원(SPY 134,010,046 + 미국국채-토스증권 105,010,955 + 관련 예수금 165,708,421 = 2026-07-22 Toss 총자산 화면의 '토스증권 기본계좌·자산 제외' 항목과 동일 금액)은 본인 자산이 아니라서 제외. 뱅가드 채권ETF는 본인 소유라 유지",
+          "note": "총 투자자산 742,688,596원 중 장모님 명의를 대신 운용 중인 자금 404,729,422원(SPY 122주 134,010,046 + 미국국채-토스증권 105,010,955 + 관련 예수금 165,708,421 = 2026-07-22 Toss 총자산 화면의 '토스증권 기본계좌·자산 제외' 항목과 동일 금액)은 본인 자산이 아니라서 제외. 뱅가드 채권ETF는 본인 소유라 유지",
           "holdings": [
-            { "name": "KODEX 미국S&P500(H)", "value": 165546990 },
-            { "name": "삼성SDI", "value": 31992000 },
-            { "name": "KODEX 미국나스닥100", "value": 19673130 },
-            { "name": "TIGER 미국S&P500배당귀족", "value": 11560720 },
-            { "name": "삼성전자", "value": 1098000 },
-            { "name": "카카오", "value": 40000 },
-            { "name": "뱅가드 미국 초장기 국채 ETF", "value": 43361040 },
-            { "name": "아이셰어즈 러셀2000 ETF", "value": 39409825 },
-            { "name": "애플", "value": 8804 },
-            { "name": "엔비디아", "value": 2556 },
-            { "name": "테슬라", "value": 2429 },
-            { "name": "알파벳 A", "value": 1964 },
-            { "name": "메타 플랫폼스", "value": 1674 },
-            { "name": "마이크로소프트", "value": 1406 },
-            { "name": "아마존닷컴", "value": 1118 },
-            { "name": "나이키", "value": 26 },
-            { "name": "한국투자미국배당귀족증권자투자신탁H(주식)-Ce", "value": 81259 },
+            { "name": "KODEX 미국S&P500(H)", "value": 165546990, "shares": 9506, "unit": "주", "gain": 18901309 },
+            { "name": "삼성SDI", "value": 31992000, "shares": 62, "unit": "주", "gain": 23312000 },
+            { "name": "KODEX 미국나스닥100", "value": 19673130, "shares": 698, "unit": "주", "gain": -303630 },
+            { "name": "TIGER 미국S&P500배당귀족", "value": 11560720, "shares": 824, "unit": "주", "gain": 1271920 },
+            { "name": "삼성전자", "value": 1098000, "shares": 4, "unit": "주", "gain": 25000 },
+            { "name": "카카오", "value": 40000, "shares": 1, "unit": "주", "gain": -71630 },
+            { "name": "뱅가드 미국 초장기 국채 ETF", "value": 43361040, "shares": 514, "unit": "주", "gain": -2932042 },
+            { "name": "아이셰어즈 러셀2000 ETF", "value": 39409825, "shares": 91, "unit": "주", "gain": 8726191 },
+            { "name": "애플", "value": 8804, "shares": 0.020341, "unit": "주", "gain": 3947 },
+            { "name": "엔비디아", "value": 2556, "shares": 0.008, "unit": "주", "gain": 960 },
+            { "name": "테슬라", "value": 2429, "shares": 0.005, "unit": "주", "gain": -319 },
+            { "name": "알파벳 A", "value": 1964, "shares": 0.004, "unit": "주", "gain": 880 },
+            { "name": "메타 플랫폼스", "value": 1674, "shares": 0.002, "unit": "주", "gain": -321 },
+            { "name": "마이크로소프트", "value": 1406, "shares": 0.002, "unit": "주", "gain": 237 },
+            { "name": "아마존닷컴", "value": 1118, "shares": 0.003, "unit": "주", "gain": 111 },
+            { "name": "나이키", "value": 26, "shares": 0.000461, "unit": "주", "gain": -46 },
+            { "name": "한국투자미국배당귀족증권자투자신탁H(주식)-Ce", "value": 81259, "gain": 16592, "note": "펀드 — 앱 화면에 좌수 미표시" },
             { "name": "예수금(현금)", "value": 25176233 }
           ]
         }
@@ -278,10 +327,10 @@ const DATA = {
       "date": "2026-08-11", "member": "엄마", "source": "screenshots/엄마_20260811_NH퇴직연금.jpg",
       "accounts": [
         { "category": "연금", "institution": "NH증권", "name": "DC·IRP 퇴직연금", "balance": 83504802,
-          "note": "평가손익 +3,319,872. 위험자산비율 73.39%",
+          "note": "위험자산비율 73.39%. 상단 평가손익 +3,319,872는 총입금액 대비, 종목별 손익 합계 +1,884,545는 매입금액 대비 (기준이 달라 두 숫자가 다름). 수량·단가는 결제기준이라 실시간 시세보다 1~2일 늦음",
           "holdings": [
-            { "name": "KODEX 미국S&P500(H)", "value": 61284780 },
-            { "name": "KODEX 장기종합채권(AA-이상)액티브", "value": 21881970 },
+            { "name": "KODEX 미국S&P500(H)", "value": 61284780, "shares": 3636, "unit": "좌", "gain": 4875340 },
+            { "name": "KODEX 장기종합채권(AA-이상)액티브", "value": 21881970, "shares": 253, "unit": "좌", "gain": -2990795 },
             { "name": "예수금(현금)", "value": 338052 }
           ] }
       ]
@@ -290,8 +339,11 @@ const DATA = {
       "date": "2026-08-11", "member": "엄마", "source": "screenshots/엄마_20260811_CMA주식계좌.jpg",
       "accounts": [
         { "category": "투자", "institution": "증권사 CMA (201-01-069752)", "name": "주식잔고", "balance": 95830235,
-          "note": "순자산 기준. 평가손익 +5,653,480 (+6.27%)",
-          "holdings": [ { "name": "KODEX 미국S&P500(H)", "value": 95812640 }, { "name": "예수금(현금)", "value": 17595 } ] }
+          "note": "순자산 기준. 평가손익 +5,653,480 (+6.27%). 앱 표시 매입가 15,940 / 현재가 16,940",
+          "holdings": [
+            { "name": "KODEX 미국S&P500(H)", "value": 95812640, "shares": 5656, "unit": "주", "gain": 5653480 },
+            { "name": "예수금(현금)", "value": 17595 }
+          ] }
       ]
     },
     {
@@ -314,16 +366,19 @@ const DATA = {
       "date": "2026-08-11", "member": "시우", "source": "screenshots/시우_20260811_키움해외잔고.jpg",
       "accounts": [
         { "category": "투자", "institution": "키움증권 (해외증권 6322-8982)", "name": "해외주식 잔고", "balance": 20812277,
-          "note": "평가금액 기준. 평가손익 +2,112,409 (+11.35%)",
-          "holdings": [ { "name": "SPY (S&P500 SPDR ETF)", "value": 20812277 } ] }
+          "note": "평가금액 기준. 평가손익 +2,112,409 (+11.35%). 달러 기준 매입 $13,119.40 → 평가 $14,678.76, 환산환율 약 1,418원/$",
+          "holdings": [ { "name": "SPY (S&P500 SPDR ETF)", "value": 20812277, "shares": 19, "unit": "주", "gain": 2112409, "usd": { "value": 14678.7578, "cost": 13119.40 } } ] }
       ]
     },
     {
       "date": "2026-08-11", "member": "시아", "source": "screenshots/시아_20260811_증권사잔고.jpg",
       "accounts": [
         { "category": "투자", "institution": "증권사 종합매매 (207-01-572717)", "name": "주식잔고", "balance": 25697709,
-          "note": "순자산 기준. 평가손익 +4,594,500 (+44.66%)",
-          "holdings": [ { "name": "KODEX 미국S&P500", "value": 14880000 }, { "name": "예수금(현금)", "value": 10817709 } ] }
+          "note": "순자산 기준. 평가손익 +4,594,500 (+44.66%). 앱 표시 매입가 17,142 / 현재가 24,800",
+          "holdings": [
+            { "name": "KODEX 미국S&P500", "value": 14880000, "shares": 600, "unit": "주", "gain": 4594500 },
+            { "name": "예수금(현금)", "value": 10817709 }
+          ] }
       ]
     },
     {
@@ -331,14 +386,17 @@ const DATA = {
       "accounts": [
         { "category": "투자", "institution": "Upbit", "name": "가상자산", "balance": 57177356,
           "note": "총매수 89,865,243원 대비 평가손익 -32,690,339원 (-36.38%)",
-          "holdings": [ { "name": "비트코인(BTC)", "value": 57174903 }, { "name": "예수금(현금)", "value": 2453 } ] }
+          "holdings": [
+            { "name": "비트코인(BTC)", "value": 57174903, "gain": -32690339, "note": "업비트 화면 하단이 잘려 보유수량(BTC 개수) 미확인" },
+            { "name": "예수금(현금)", "value": 2453 }
+          ] }
       ]
     },
     { "date": "2026-08-21", "member": "아빠", "source": "screenshots/Screenshot_20260821_110421_Toss.jpg",
       "accounts": [
         { "category": "입출금", "institution": "토스뱅크 연동", "name": "입출금 계좌 합계 (다수 계좌)", "balance": 33157363 },
         { "category": "투자", "institution": "토스 내투자 (연결계좌 종합)", "name": "국내·해외 주식 + 기타투자 + 예수금", "balance": 295827184,
-          "note": "이번 스크린샷은 계좌별 합계만 표시돼 종목별 상세내역 없음 (8/15자 종목 리스트는 낡아서 미표시, 다음 상세 스크린샷 오면 갱신). 토스증권 기본계좌 398,059,602원(+12.6%, 장모님 명의를 대신 운용 중인 SPY+미국채+예수금)은 본인 자산 아니라서 제외" },
+          "note": "이번 스크린샷은 계좌별 합계만 표시돼 종목별 상세내역 없음 (수량 섹션은 상세가 남아있는 8/15 스냅샷 사용). 토스증권 기본계좌 398,059,602원(+12.6%, 장모님 명의를 대신 운용 중인 SPY+미국채+예수금)은 본인 자산 아니라서 제외" },
         { "category": "연금", "institution": "토스 내투자 (연결계좌 종합)", "name": "연금저축계좌(신)", "balance": 34456797,
           "note": "본인 소유 자산 맞음. Toss 앱 화면엔 '자산 제외'로 뜨지만 이는 유동성 낮은 장기 자산이라 사용자가 앱 내 총액 집계에서 임의로 뺀 것 (2026-08-23 확인) — 가족 자산엔 포함" }
       ]
@@ -347,7 +405,10 @@ const DATA = {
       "accounts": [
         { "category": "투자", "institution": "Upbit", "name": "가상자산", "balance": 66085000,
           "note": "총매수 89,865,243원 대비 평가손익 -23,782,694원 (-26.46%)",
-          "holdings": [ { "name": "비트코인(BTC)", "value": 66082547 }, { "name": "예수금(현금)", "value": 2453 } ] }
+          "holdings": [
+            { "name": "비트코인(BTC)", "value": 66082547, "gain": -23782694, "note": "업비트 화면 하단이 잘려 보유수량(BTC 개수) 미확인" },
+            { "name": "예수금(현금)", "value": 2453 }
+          ] }
       ]
     }
   ]
@@ -392,23 +453,46 @@ flat.slice().sort((a,b)=> a.date.localeCompare(b.date)).forEach(r=>{
 });
 const current = Array.from(latestMap.values());
 
+// 계좌별로 '종목 상세가 남아있는 가장 최근 스냅샷'. 최신 스냅샷이 계좌 합계만 보여줄 때
+// 수량을 어디서 가져올지 정하는 기준이라, 잔액을 만지는 코드보다 먼저 잡아둔다.
+const detailLatest = new Map();
+flat.slice().sort((a,b)=>a.date.localeCompare(b.date)).forEach(r=>{
+  if(r.holdings && r.holdings.length) detailLatest.set(r.member+"|"+r.institution+"|"+r.name, r);
+});
+
 // ── 일일 시세 반영: 주식/가상자산 보유종목을 최신 시장가 기준으로 스케일 ──
 // 매일 클라우드 스케줄러가 MARKET_LIVE만 갱신함. MARKET_ANCHOR는 이 기능 도입 기준일 값으로 고정.
+// 시세가 움직여도 보유수량(shares)은 그대로다 — 평가금액만 옮기고, 매입원가는 고정이니
+// 평가손익(gain)은 새 평가금액에서 다시 뺀다. current뿐 아니라 수량 표시에 쓰는
+// detailLatest 행도 같이 손봐야 두 섹션의 단가가 어긋나지 않는다.
 const MARKET_ANCHOR = { date: "2026-08-23", spy: 767.00, btcKrw: 106570000 };
 const MARKET_LIVE   = { date: "2026-08-23", spy: 767.00, btcKrw: 106570000 };
 const marketRatio = { equity: MARKET_LIVE.spy / MARKET_ANCHOR.spy, crypto: MARKET_LIVE.btcKrw / MARKET_ANCHOR.btcKrw };
-current.forEach(r=>{
+function applyMarket(r){
   if(r.balance<0) return;
   if(r.category!=='투자' && r.category!=='연금') return;
   if(r.holdings && r.holdings.length){
     r.holdings = r.holdings.map(h=>{
       const ratio = marketRatio[classifyHolding(h.name)] || 1;
-      return ratio===1 ? h : { name:h.name, value: Math.round(h.value*ratio) };
+      if(ratio===1) return h;
+      const value = Math.round(h.value*ratio);
+      const scaled = Object.assign({}, h, {value});
+      if(h.gain!=null) scaled.gain = value - (h.value - h.gain);
+      return scaled;
     });
     r.balance = r.holdings.reduce((s,h)=>s+h.value,0);
   } else {
     r.balance = Math.round(r.balance * marketRatio.equity);
   }
+}
+const liveRows = new Set(current);
+current.forEach(applyMarket);
+detailLatest.forEach((r,k)=>{
+  if(liveRows.has(r)) return;
+  // 이 행은 과거 스냅샷이라 순자산 추이 그래프가 원본 그대로 써야 한다 → 복제본에만 시세를 입힌다
+  const clone = Object.assign({}, r);
+  applyMarket(clone);
+  detailLatest.set(k, clone);
 });
 
 function memberShares(row){
@@ -492,11 +576,248 @@ document.getElementById('holdingsList').innerHTML = holdingsSorted.map(([name,ag
   </div>`;
 }).join('');
 
-const sp500Total = (holdingsAgg['KODEX 미국S&P500']?.total||0) + (holdingsAgg['SPY (S&P500 SPDR ETF)']?.total||0);
-if(sp500Total>0){
-  document.getElementById('sp500Callout').innerHTML =
-    `💡 서로 다른 상품(KODEX 미국S&P500, SPY)이지만 둘 다 S&amp;P500 지수를 추종해요 — 가족 전체로 보면 S&amp;P500 계열에만 <b class="num">${won(sp500Total)}</b>이 들어가 있어요.`;
+// S&P500 계열 합계는 종목명이 계좌마다 달라서(KODEX·TIGER·SPY) 이름 매칭으로 묶어야 한다.
+// 정확한 금액·수량은 아래 '종목별 보유수량' 칸에서 계산하므로 여기서는 안내만 한다.
+
+// ── 종목별 보유수량 · 평단가 ─────────────────────────────────────────────
+// 앱에 찍힌 보유수량을 남겨두면 평가금액 = 수량 × 단가로 쪼갤 수 있고,
+// 그래야 평가액 변화가 "추가매수" 때문인지 "시세" 때문인지 갈라진다.
+// 평단가·단가·수익률은 저장하지 않고 value/gain/shares에서 매번 계산한다.
+const CASH_RE = /예수금|현금/;
+const SP_RE = /S&P\s*500|SPY/i;
+
+function holdingRowsOf(rows){
+  const out = [];
+  rows.forEach(r=>{
+    if(r.balance<0 || (r.category!=='투자' && r.category!=='연금')) return;
+    (r.holdings||[]).forEach(h=>{
+      if(CASH_RE.test(h.name)) return;
+      out.push(Object.assign({}, h, {date:r.date, member:r.member, institution:r.institution}));
+    });
+  });
+  return out;
 }
+
+// 최신 스냅샷에 종목 상세가 없는 계좌는, 상세가 남아있는 가장 최근 스냅샷(detailLatest)을 쓴다
+const detailRows = holdingRowsOf(Array.from(detailLatest.values()));
+
+function costOf(h){ return h.value - (h.gain||0); }
+function hasQty(h){ return typeof h.shares === 'number' && h.shares > 0; }
+function mmdd(d){ const p = d.split('-'); return p[1]+'/'+p[2]; }
+function priceStr(p){
+  return p>=1000 ? Math.round(p).toLocaleString('ko-KR')+'원'
+                 : p.toLocaleString('ko-KR',{maximumFractionDigits:1})+'원';
+}
+function qtyStr(s, unit){
+  const u = unit || '주';
+  return (s<1 ? String(s) : s.toLocaleString('ko-KR',{maximumFractionDigits:4})) + u;
+}
+function pctStr(gain, cost){
+  if(!cost) return '';
+  const p = gain/cost*100;
+  return (p>=0?'+':'') + p.toFixed(1) + '%';
+}
+function gainSpan(gain, cost){
+  return `<span class="${gain>=0?'jade':'rustc'}">${gain>=0?'+':''}${won(gain)} ${pctStr(gain,cost)}</span>`;
+}
+
+const qtyAgg = {};
+detailRows.forEach(h=>{
+  const a = qtyAgg[h.name] || (qtyAgg[h.name] = {shares:0, unit:'', value:0, cost:0, known:false, rows:[]});
+  a.value += h.value;
+  a.cost  += costOf(h);
+  if(hasQty(h)){ a.shares += h.shares; a.known = true; a.unit = h.unit || a.unit; }
+  a.rows.push(h);
+});
+
+// 같은 종목의 시점별 환산단가(= 평가금액 ÷ 수량). 같은 날 여러 계좌면 수량가중 평균.
+const priceHist = {};
+holdingRowsOf(flat).forEach(h=>{
+  if(!hasQty(h)) return;
+  const byName = priceHist[h.name] || (priceHist[h.name] = {});
+  const d = byName[h.date] || (byName[h.date] = {value:0, shares:0});
+  d.value += h.value; d.shares += h.shares;
+});
+const priceSeries = {};
+Object.entries(priceHist).forEach(([name, byDate])=>{
+  priceSeries[name] = Object.entries(byDate).sort((a,b)=>a[0].localeCompare(b[0]))
+    .map(([date,d])=>({date, price:d.value/d.shares}));
+});
+
+// 같은 계좌·같은 종목이 두 시점 이상 찍혔으면 평가액 변화를 매매효과 / 시세효과로 분해
+//   Δ평가액 = (수량변화 × 새단가) + (옛수량 × 단가변화)   ← 교차항 없이 정확히 나뉨
+const qtyChanges = [];
+const byAccountHolding = {};
+holdingRowsOf(flat).forEach(h=>{
+  const k = h.member+"|"+h.institution+"|"+h.name;
+  (byAccountHolding[k] = byAccountHolding[k] || []).push(h);
+});
+Object.values(byAccountHolding).forEach(arr=>{
+  if(arr.length < 2) return;
+  arr.sort((a,b)=>a.date.localeCompare(b.date));
+  const a0 = arr[arr.length-2], a1 = arr[arr.length-1];
+  if(a0.date === a1.date) return;
+  let trade=null, price=null, basis='';
+  if(hasQty(a0) && hasQty(a1)){
+    const p0 = a0.value/a0.shares, p1 = a1.value/a1.shares;
+    trade = (a1.shares - a0.shares) * p1;
+    price = a0.shares * (p1 - p0);
+    basis = '수량 기준';
+  } else if(a0.gain!=null && a1.gain!=null){
+    // 수량은 몰라도 매입원가가 그대로면 사고판 게 없다는 뜻이라 전액 시세 효과
+    const c0 = costOf(a0), c1 = costOf(a1);
+    if(Math.abs(c1-c0) > Math.max(100, c0*0.0001)) return;
+    trade = 0; price = a1.value - a0.value;
+    basis = '매입원가 불변 → 매매 없음';
+  } else return;
+  qtyChanges.push({name:a1.name, member:a1.member, institution:a1.institution, a0, a1, trade, price, basis});
+});
+
+const qtySorted = Object.entries(qtyAgg).sort((a,b)=>b[1].value-a[1].value);
+const withQty = qtySorted.filter(([,a])=>a.known);
+const noQty   = qtySorted.filter(([,a])=>!a.known);
+
+// 요약: S&P500 계열은 상품이 달라도 결국 같은 지수를 산 것 → 수량까지 한 줄로
+(function renderQtySummary(){
+  const spNames = withQty.filter(([n])=>SP_RE.test(n));
+  const spAll = detailRows.filter(h=>SP_RE.test(h.name));
+  const spValue = spAll.reduce((s,h)=>s+h.value,0);
+  const spCost  = spAll.reduce((s,h)=>s+costOf(h),0);
+  const knownCount = withQty.length, totalCount = qtySorted.length;
+  const chips = spNames.map(([n,a])=>`<span class="chip">${n} <b class="num">${qtyStr(a.shares,a.unit)}</b></span>`).join('');
+  document.getElementById('qtySummary').innerHTML = `
+    <div class="qty-summary">
+      <div class="top">
+        <span>📈 S&amp;P500 지수를 따라가는 종목, 가족 전체 합계</span>
+        <b class="num">${won(spValue)}</b>
+      </div>
+      <div class="chips">${chips}</div>
+      <div class="qty-meta">매입 <span class="num">${won(spCost)}</span> → 평가 <span class="num">${won(spValue)}</span> ${gainSpan(spValue-spCost, spCost)}
+        · 종목 ${totalCount}개 중 <b style="color:var(--text)">${knownCount}개</b>의 보유수량이 확인됐어요</div>
+    </div>`;
+})();
+
+// 최신 잔액과 종목 상세의 기준일이 다른 계좌는 눈에 띄게 알려준다
+(function renderStale(){
+  const stale = current.filter(r=>{
+    const d = detailLatest.get(r.member+"|"+r.institution+"|"+r.name);
+    return d && d.date < r.date;
+  }).map(r=>({r, d:detailLatest.get(r.member+"|"+r.institution+"|"+r.name)}));
+  if(!stale.length){ document.getElementById('qtyStale').innerHTML=''; return; }
+  document.getElementById('qtyStale').innerHTML = stale.map(({r,d})=>`
+    <div class="warnbox">⚠️ <b>${MEMBER_EMOJI[r.member]||''} ${r.member} · ${r.institution}</b> —
+      계좌 잔액은 <span class="num">${mmdd(r.date)} 기준 ${won(r.balance)}</span>인데,
+      종목별 수량은 마지막으로 상세가 보인 <span class="num">${mmdd(d.date)} 기준 ${won(d.balance)}</span> 화면에서 가져왔어요.
+      아래 수량은 그 사이 매매가 있었다면 달라질 수 있습니다 — 다음에 <b>종목 리스트가 보이는 화면</b>으로 찍어주시면 맞춰집니다.</div>`).join('');
+})();
+
+// 시세 효과 vs 매매 효과 분해
+(function renderChanges(){
+  const el = document.getElementById('qtyChanges');
+  if(!qtyChanges.length){ el.innerHTML=''; return; }
+  el.innerHTML = qtyChanges.sort((a,b)=>Math.abs(b.a1.value-b.a0.value)-Math.abs(a.a1.value-a.a0.value)).map(c=>{
+    const delta = c.a1.value - c.a0.value;
+    const dq = (hasQty(c.a0)&&hasQty(c.a1)) ? c.a1.shares - c.a0.shares : null;
+    return `<div class="qty-card">
+      <div class="qty-top">
+        <div class="nm">🔍 ${c.name} <span class="pill">${MEMBER_EMOJI[c.member]||''} ${c.member} · ${c.institution}</span></div>
+        <div class="rt"><div class="qty-big num" style="color:${delta>=0?'var(--jade)':'var(--rust)'}">${delta>=0?'+':''}${won(delta)}</div>
+          <div class="qty-meta">${mmdd(c.a0.date)} → ${mmdd(c.a1.date)}</div></div>
+      </div>
+      <div class="qty-trend">
+        평가액 변화를 쪼개보면 —
+        <b class="num" style="color:var(--text)">시세 ${c.price>=0?'+':''}${won(c.price)}</b>
+        · <b class="num" style="color:var(--text)">매매 ${c.trade>=0?'+':''}${won(c.trade)}</b>
+        <span class="pill">${c.basis}</span><br>
+        ${c.trade===0
+          ? `이 기간엔 <b style="color:var(--text)">사거나 판 게 없어요.</b> 늘어난 ${won(Math.abs(delta))}은 전부 시세 변동입니다
+             (<span class="num">${(delta/c.a0.value*100).toFixed(2)}%</span>).`
+          : `보유수량이 <span class="num">${qtyStr(c.a0.shares,c.a0.unit)} → ${qtyStr(c.a1.shares,c.a1.unit)}</span>
+             (${dq>=0?'+':''}<span class="num">${qtyStr(Math.abs(dq),c.a1.unit)}</span> ${dq>=0?'추가매수':'매도'}),
+             단가가 <span class="num">${priceStr(c.a0.value/c.a0.shares)} → ${priceStr(c.a1.value/c.a1.shares)}</span>로 움직였어요.`}
+      </div>
+    </div>`;
+  }).join('');
+})();
+
+// 종목 카드
+document.getElementById('qtyList').innerHTML = withQty.map(([name, a])=>{
+  const gain = a.value - a.cost;
+  const avg = a.cost / a.shares;
+  // 현재 단가는 '가장 최근 시점' 행에서만 뽑는다. 계좌마다 스크린샷 날짜가 달라서
+  // 전체를 평균내면 오래된 단가가 섞여버리고, 표시 중인 평가금액에서 직접 뽑아야 시세 반영과도 어긋나지 않는다.
+  const qtyRows = a.rows.filter(hasQty);
+  const markDate = qtyRows.map(h=>h.date).sort().slice(-1)[0];
+  const markRows = qtyRows.filter(h=>h.date===markDate);
+  const mark = markRows.reduce((s,h)=>s+h.value,0) / markRows.reduce((s,h)=>s+h.shares,0);
+  const series = priceSeries[name] || [];
+  const multi = qtyRows.length > 1;
+
+  const rows = a.rows.slice().sort((x,y)=>y.value-x.value).map(h=>{
+    const g = h.gain||0, c = costOf(h);
+    const coarse = hasQty(h) && h.shares < 0.01;
+    const qty = hasQty(h)
+      ? `<b class="num" style="color:var(--text)">${qtyStr(h.shares,h.unit)}</b> · 평단 <span class="num">${priceStr(c/h.shares)}</span>${coarse?' <span class="pill">소수점 수량 반올림 — 단가 참고용</span>':''}`
+      : `<span class="pill">수량 미확인</span>`;
+    return `<div class="qty-row">
+      <span>${MEMBER_EMOJI[h.member]||''} ${h.member} <span style="opacity:.7">${h.institution}</span> <span class="pill">${mmdd(h.date)}</span></span>
+      <span class="r">${qty} · <span class="num">${won(h.value)}</span> ${gainSpan(g,c)}</span>
+    </div>`;
+  }).join('');
+
+  let trend = '';
+  if(series.length > 1){
+    const chain = series.map(p=>`${mmdd(p.date)} <b class="num" style="color:var(--text)">${priceStr(p.price)}</b>`).join(' → ');
+    const ch = (series[series.length-1].price/series[0].price - 1)*100;
+    trend = `<div class="qty-trend">단가 추이 · ${chain}
+      <span class="${ch>=0?'jade':'rustc'} num">(${ch>=0?'+':''}${ch.toFixed(1)}%)</span></div>`;
+  } else if(multi){
+    trend = `<div class="qty-trend">계좌마다 산 시점이 달라 평단가가 다르지만, 지금 단가는 다 같은 상품이라 동일해요.</div>`;
+  }
+
+  const usdRow = a.rows.find(h=>h.usd);
+  const usdNote = usdRow
+    ? `<div class="qty-trend">달러 기준 매입 <span class="num">$${usdRow.usd.cost.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}</span>
+       → 평가 <span class="num">$${usdRow.usd.value.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}</span>
+       · 주당 <span class="num">$${(usdRow.usd.value/usdRow.shares).toFixed(2)}</span>
+       · 적용환율 약 <span class="num">${Math.round(usdRow.value/usdRow.usd.value).toLocaleString('ko-KR')}원/$</span></div>`
+    : '';
+
+  return `<div class="qty-card">
+    <div class="qty-top">
+      <div class="nm">${name}</div>
+      <div class="rt">
+        <div class="qty-big num">${qtyStr(a.shares, a.unit)}</div>
+        <div class="qty-meta"><span class="num">${won(a.value)}</span> ${gainSpan(gain, a.cost)}</div>
+      </div>
+    </div>
+    <div class="qty-meta">가중 평단 <b class="num" style="color:var(--text)">${priceStr(avg)}</b>
+      · 현재 단가 <b class="num" style="color:var(--text)">${priceStr(mark)}</b> <span class="pill">${mmdd(markDate)}</span>
+      · 매입 <span class="num">${won(a.cost)}</span></div>
+    <div class="qty-rows">${rows}</div>
+    ${trend}${usdNote}
+  </div>`;
+}).join('');
+
+// 수량을 아직 모르는 것들
+(function renderUnknown(){
+  const noDetail = current.filter(r=> r.balance>0 && (r.category==='투자'||r.category==='연금')
+    && !detailLatest.has(r.member+"|"+r.institution+"|"+r.name));
+  if(!noQty.length && !noDetail.length){ document.getElementById('qtyUnknown').innerHTML=''; return; }
+  const items = noQty.map(([n,a])=>{
+    const why = a.rows.find(h=>h.note);
+    return `<div class="qty-row"><span>${n} ${why?`<span class="pill">${why.note}</span>`:''}</span>
+      <span class="r"><span class="num">${won(a.value)}</span> ${gainSpan(a.value-a.cost, a.cost)}</span></div>`;
+  }).join('') + noDetail.map(r=>
+    `<div class="qty-row"><span>${MEMBER_EMOJI[r.member]||''} ${r.member} · ${r.institution} · ${r.name}
+      <span class="pill">계좌 합계만 확인됨</span></span>
+      <span class="r"><span class="num">${won(r.balance)}</span></span></div>`).join('');
+  document.getElementById('qtyUnknown').innerHTML = `<div class="qty-card">
+    <div class="qty-top"><div class="nm">❓ 아직 수량을 모르는 것들</div></div>
+    <div class="qty-meta">아래 항목은 앱 화면에 수량이 안 보였어요. 해당 화면을 스크롤해서 다시 찍어주시면 채워집니다.</div>
+    <div class="qty-rows">${items}</div>
+  </div>`;
+})();
 
 // ── 순자산 추이 (실제 과거 + 시뮬레이터 기반 미래 예상선, 슬라이더 움직이면 부드럽게 애니메이션) ──
 let trendPrevFutureNets = null;
@@ -525,6 +846,7 @@ function renderTrendChart(){
   const startNets = (trendPrevFutureNets && trendPrevFutureNets.length===targetNets.length)
     ? trendPrevFutureNets.slice() : targetNets.slice();
 
+  // Y축을 슬라이더가 낼 수 있는 전체 범위(최대 이동+최대 저축, 10년)로 딱 한 번만 계산해서 고정 — 이후 절대 안 움직임
   if(FIXED_TREND_MIN===null && typeof simulate === 'function'){
     const histVals = histPoints.map(p=>p.net);
     const worstCase = Math.min(...histVals, targetNets[0]!==undefined?targetNets[0]:histVals[0]);
