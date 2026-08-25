@@ -5,93 +5,133 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>우리 가족 자산통장</title>
 <style>
+  /* ── 1. 색 토큰 ───────────────────────────────────────────────
+     라이트 모드에서 손익색(--up/--down)과 보조글씨(--sub)를 반드시 다시 정의할 것.
+     예전엔 다크용 연한 색이 흰 배경에 그대로 남아 손익 숫자 대비가 1.7:1까지 떨어졌다. */
   :root{
+    --ink:#fff2f7; --ink2:#ffffff; --ink3:#ffe4ee; --line:#f8cee0;
+    --text:#4a2438; --sub:#7a5468;
+    --accent:#e8608f; --accent-deep:#c84571;
+    --up:#0f7a55; --down:#b3243c; --warn-ink:#a4620f;
+    --cash:#5568c4; --save:#2f8f6d; --invest:#9b52c4; --pension:#b3781f; --realty:#3f8f57; --debt:#b3243c; --crypto:#a06f10;
+    --fs-micro:12px; --fs-body:13px; --fs-label:15px; --fs-num:20px;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --ink:#2b1522; --ink2:#371c2c; --ink3:#432437; --line:#5e2f4c;
+      --text:#fbe7f0; --sub:#cc9ab5;
+      --accent:#f2789f; --accent-deep:#e0567f;
+      --up:#5fc7a3; --down:#ef6f7a; --warn-ink:#f4b26b;
+      --cash:#8aa0e8; --save:#5fc7a3; --invest:#cd8ae6; --pension:#f4b26b; --realty:#7cc98f; --debt:#ef6f7a; --crypto:#e0a53d;
+    }
+  }
+  :root[data-theme="dark"]{
     --ink:#2b1522; --ink2:#371c2c; --ink3:#432437; --line:#5e2f4c;
     --text:#fbe7f0; --sub:#cc9ab5;
     --accent:#f2789f; --accent-deep:#e0567f;
-    --jade:#5fc7a3; --rust:#ef6f7a;
+    --up:#5fc7a3; --down:#ef6f7a; --warn-ink:#f4b26b;
     --cash:#8aa0e8; --save:#5fc7a3; --invest:#cd8ae6; --pension:#f4b26b; --realty:#7cc98f; --debt:#ef6f7a; --crypto:#e0a53d;
   }
-  @media (prefers-color-scheme: light){
-    :root{ --ink:#fff2f7; --ink2:#ffffff; --ink3:#ffe4ee; --line:#f8cee0;
-      --text:#4a2438; --sub:#a2748c; --accent:#e8608f; --accent-deep:#c84571; }
-  }
-  :root[data-theme="dark"]{ --ink:#2b1522; --ink2:#371c2c; --ink3:#432437; --line:#5e2f4c;
-    --text:#fbe7f0; --sub:#cc9ab5; --accent:#f2789f; --accent-deep:#e0567f; }
-  :root[data-theme="light"]{ --ink:#fff2f7; --ink2:#ffffff; --ink3:#ffe4ee; --line:#f8cee0;
-    --text:#4a2438; --sub:#a2748c; --accent:#e8608f; --accent-deep:#c84571; }
 
+  /* ── 2. 뼈대 ─────────────────────────────────────────────── */
   *{box-sizing:border-box;}
   body{margin:0;}
   .ledger{
     background:var(--ink); color:var(--text); min-height:100vh;
     font-family:'Pretendard','Malgun Gothic',-apple-system,BlinkMacSystemFont,sans-serif;
-    padding:32px 20px 90px; transition:background .2s;
+    padding:32px 20px 90px;
   }
   .num{font-variant-numeric:tabular-nums; font-feature-settings:"tnum" 1; font-family:ui-monospace,'SFMono-Regular',Consolas,'Noto Sans Mono',monospace;}
   .wrap{max-width:920px; margin:0 auto;}
+  .serif{font-family:'Noto Serif KR','Nanum Myeongjo',ui-serif,Georgia,serif;}
 
-  .masthead{display:flex; justify-content:space-between; align-items:flex-end; gap:16px; margin-bottom:22px; flex-wrap:wrap;
-    border-bottom:1px solid var(--line); padding-bottom:16px;}
-  .masthead .eyebrow{font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:var(--accent);}
-  .masthead h1{font-family:'Noto Serif KR','Nanum Myeongjo',ui-serif,Georgia,serif; font-size:26px; font-weight:700;
-    margin:4px 0 0; text-wrap:balance;}
-  .masthead .updated{font-size:12px; color:var(--sub); text-align:right;}
+  .masthead{display:flex; justify-content:space-between; align-items:flex-end; gap:16px; margin-bottom:20px; flex-wrap:wrap;
+    border-bottom:1px solid var(--line); padding-bottom:14px;}
+  .masthead .eyebrow{font-family:'Noto Serif KR',ui-serif,Georgia,serif; font-size:19px; font-weight:700; color:var(--text);}
+  .masthead .updated{font-size:var(--fs-micro); color:var(--sub); text-align:right; line-height:1.6;}
 
   .cover{
     background:linear-gradient(160deg,var(--ink2),var(--ink3));
-    border:1px solid var(--line); border-radius:22px; padding:30px 32px; margin-bottom:20px; position:relative; overflow:hidden;
+    border:1px solid var(--line); border-radius:22px; padding:28px 30px; margin-bottom:18px; position:relative; overflow:hidden;
   }
   .cover::before{content:""; position:absolute; top:0; left:0; right:0; height:3px;
     background:linear-gradient(90deg,var(--accent),transparent 70%);}
-  .cover .label{font-size:13px; color:var(--sub); letter-spacing:.02em;}
-  .cover .amount{font-family:'Noto Serif KR','Nanum Myeongjo',ui-serif,Georgia,serif; font-size:44px; font-weight:700;
-    color:var(--accent); margin-top:6px; letter-spacing:-.5px;}
-  .cover .sub{display:flex; gap:32px; margin-top:18px; flex-wrap:wrap;}
-  .cover .sub div{font-size:12px; color:var(--sub);}
-  .cover .sub b{display:block; font-size:16px; color:var(--text); margin-top:2px; font-weight:600;}
-  .cover .sub b.rust{color:var(--rust);}
+  .cover h1{font-family:'Noto Serif KR',ui-serif,Georgia,serif; font-size:17px; font-weight:600; color:var(--text); margin:0;}
+  .cover .amount{font-family:'Noto Serif KR',ui-serif,Georgia,serif; font-size:42px; font-weight:700;
+    color:var(--accent); margin-top:4px; letter-spacing:-.5px; line-height:1.1;}
+  .cover .exact{font-size:var(--fs-micro); color:var(--sub); margin-top:5px;}
+  .cover .sub{display:flex; gap:28px; margin-top:16px; flex-wrap:wrap;}
+  .cover .sub div{font-size:var(--fs-micro); color:var(--sub);}
+  .cover .sub b{display:block; font-size:var(--fs-label); color:var(--text); margin-top:2px; font-weight:600;}
 
-  .entries{display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:20px;}
+  .entries{display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:18px;}
   @media (max-width:760px){ .entries{grid-template-columns:repeat(2,1fr);} }
-  .entry{background:var(--ink2); border:1px solid var(--line); border-radius:18px; padding:16px; position:relative;}
-  .entry .who{font-size:12px; color:var(--sub); display:flex; justify-content:space-between; align-items:center;}
-  .entry .tag{color:var(--accent); font-size:12px;}
-  .entry .net{font-size:19px; font-weight:700; margin-top:8px;}
-  .entry .bd{font-size:11px; color:var(--sub); margin-top:8px; line-height:1.6;}
-  .entry .bd .rust{color:var(--rust);}
+  .entry{background:var(--ink2); border:1px solid var(--line); border-radius:18px; padding:15px;}
+  .entry .who{font-size:var(--fs-body); color:var(--sub); display:flex; justify-content:space-between; align-items:center;}
+  .entry .tag{color:var(--accent);}
+  .entry .net{font-size:18px; font-weight:800; margin-top:7px;}
+  .entry .bd{font-size:var(--fs-micro); color:var(--sub); margin-top:6px;}
 
-  section.panel{background:var(--ink2); border:1px solid var(--line); border-radius:22px; padding:22px 24px; margin-bottom:16px;}
-  section.panel h2{font-family:'Noto Serif KR','Nanum Myeongjo',ui-serif,Georgia,serif; font-size:16px; margin:0 0 16px; font-weight:700;}
+  section.panel{background:var(--ink2); border:1px solid var(--line); border-radius:22px; padding:24px; margin-bottom:18px;}
+  section.panel h2{font-family:'Noto Serif KR',ui-serif,Georgia,serif; font-size:16px; margin:0 0 14px; font-weight:700;}
 
-  .stackbar{display:flex; height:22px; border-radius:11px; overflow:hidden; border:1px solid var(--line);}
+  .zone-rule{display:flex; align-items:center; gap:12px; margin:38px 0 18px;
+    font-size:var(--fs-body); color:var(--sub); letter-spacing:.08em;}
+  .zone-rule::after{content:""; flex:1; height:1px; background:var(--line);}
+
+  /* ── 3. 자산 구성 ────────────────────────────────────────── */
+  .lede{font-size:var(--fs-label); color:var(--text); line-height:1.6; margin:-2px 0 14px;}
+  .lede b{color:var(--accent);}
+  .stackbar{display:flex; height:20px; border-radius:10px; overflow:hidden; border:1px solid var(--line);}
   .stackbar div{height:100%;}
-  .comp-legend{display:flex; flex-wrap:wrap; gap:8px 20px; margin-top:16px; font-size:12px;}
+  .comp-legend{display:flex; flex-wrap:wrap; gap:8px 18px; margin-top:14px; font-size:var(--fs-body);}
   .comp-legend span{display:inline-flex; align-items:center; gap:7px; color:var(--sub);}
-  .comp-legend b{color:var(--text); font-weight:600;}
-  .dot{width:9px; height:9px; border-radius:50%; display:inline-block;}
+  .comp-legend b{color:var(--text); font-weight:800;}
+  .dot{width:9px; height:9px; border-radius:50%; display:inline-block; flex-shrink:0;}
+  .basis{font-size:var(--fs-micro); color:var(--sub); margin-top:10px; line-height:1.6;}
 
-  .filters{display:flex; gap:8px; margin-bottom:14px; flex-wrap:wrap;}
+  /* ── 4. 표 ──────────────────────────────────────────────── */
+  .filters{display:flex; gap:8px; margin-bottom:12px; flex-wrap:wrap;}
   select{background:var(--ink3); color:var(--text); border:1px solid var(--line); border-radius:12px;
-    padding:7px 10px; font-size:13px; font-family:inherit;}
-  .tablewrap{overflow-x:auto; border:1px solid var(--line); border-radius:16px;}
-  table{width:100%; border-collapse:collapse; font-size:13px; min-width:640px;}
-  th,td{text-align:left; padding:10px 12px; border-bottom:1px solid var(--line);}
-  th{color:var(--sub); font-weight:600; font-size:11px; letter-spacing:.04em; text-transform:uppercase;
-    background:var(--ink3); position:sticky; top:0;}
+    padding:7px 10px; font-size:var(--fs-body); font-family:inherit;}
+  .tablewrap{overflow:auto; max-height:540px; border:1px solid var(--line); border-radius:16px;}
+  table{width:100%; border-collapse:collapse; font-size:var(--fs-body); min-width:600px;}
+  th,td{text-align:left; padding:9px 12px; border-bottom:1px solid var(--line);}
+  th{color:var(--sub); font-weight:600; font-size:var(--fs-micro); letter-spacing:.04em;
+    background:var(--ink3); position:sticky; top:0; z-index:1;}
   tbody tr:nth-child(even){background:color-mix(in srgb, var(--ink3) 45%, transparent);}
-  td.amt{text-align:right;}
-  tr.debt td.amt{color:var(--rust);}
-  td .note{color:var(--sub); font-size:11px;}
+  td.amt{text-align:right; white-space:nowrap;}
+  .swipe{font-size:var(--fs-micro); color:var(--sub); margin-top:8px;}
 
-  .howto{background:var(--ink3); border:1px dashed var(--line); border-radius:16px; padding:16px 18px;
-    font-size:12.5px; color:var(--sub); line-height:1.7;}
+  td details.cellnote{display:inline;}
+  td details.cellnote>summary{cursor:pointer; list-style:none; color:var(--sub); font-size:var(--fs-micro);}
+  td details.cellnote>summary::-webkit-details-marker{display:none;}
+  td details.cellnote>summary::before{content:"· ";}
+  td details.cellnote>summary::after{content:" ⌄"; opacity:.6;}
+  td details.cellnote[open]>summary{color:var(--accent);}
+  td details.cellnote .full{display:block; margin-top:5px; max-width:34em; color:var(--sub);
+    font-size:var(--fs-micro); line-height:1.7;}
+
+  /* ── 5. 접기 ────────────────────────────────────────────── */
+  .howto{background:var(--ink3); border:1px dashed var(--line); border-radius:16px; padding:14px 16px;
+    font-size:var(--fs-body); color:var(--sub); line-height:1.7;}
   .howto b{color:var(--text);}
-  footer.priv{color:var(--sub); font-size:11px; margin-top:20px; text-align:center; opacity:.7;}
+  .more{margin-top:9px;}
+  .more>summary{cursor:pointer; list-style:none; display:inline-flex; align-items:center; gap:6px;
+    font-size:var(--fs-micro); color:var(--accent-deep); border:1px dashed var(--line); border-radius:999px;
+    padding:3px 11px; user-select:none; font-weight:600;}
+  .more>summary::-webkit-details-marker{display:none;}
+  .more>summary::after{content:"▾"; opacity:.75; font-size:10px;}
+  .more[open]>summary::after{content:"▴";}
+  .more[open]>summary{margin-bottom:8px;}
+  .more .body{font-size:var(--fs-micro); color:var(--sub); line-height:1.8;}
+  .more .body b{color:var(--text);}
 
-  .family{margin-bottom:22px;}
-  .family .cap{font-size:13px; color:var(--sub); margin-bottom:14px;}
-  .family-strip{display:flex; gap:16px; overflow-x:auto; padding:10px 4px 18px;}
+  footer.priv{color:var(--sub); font-size:var(--fs-micro); margin-top:18px; text-align:center;}
+
+  .family{margin-bottom:20px;}
+  .family .cap{font-size:var(--fs-body); color:var(--sub); margin-bottom:12px;}
+  .family-strip{display:flex; gap:16px; overflow-x:auto; padding:8px 4px 16px;}
   .family-strip img{
     height:190px; width:auto; display:block; border-radius:6px;
     border:7px solid var(--ink2); box-shadow:0 6px 18px rgba(233,96,143,.28);
@@ -103,126 +143,105 @@
   .family-strip img:nth-child(3){transform:rotate(-1.5deg);}
   .family-strip img:nth-child(4){transform:rotate(3deg);}
   .family-strip img:nth-child(5){transform:rotate(-2deg);}
+  @media (max-width:620px){ .family-strip img{height:132px; border-width:5px;} }
 
-  /* holdings */
-  .holding-card{background:var(--ink3); border-radius:14px; padding:13px 16px; margin-bottom:10px;}
-  .holding-head{display:flex; justify-content:space-between; align-items:center; font-size:13px; font-weight:600; margin-bottom:9px;}
-  .holding-head .name{display:flex; align-items:center; gap:6px;}
-  .holding-members{font-size:11px; color:var(--sub); margin-top:7px; display:flex; flex-wrap:wrap; gap:4px 12px;}
-  .callout{margin-top:14px; font-size:12.5px; color:var(--accent); background:color-mix(in srgb, var(--accent) 12%, transparent);
-    border-radius:12px; padding:10px 14px;}
-
-  /* 보유수량 */
+  /* ── 6. 보유 종목 ───────────────────────────────────────── */
   .qty-summary{background:linear-gradient(160deg,var(--ink3),var(--ink2)); border:1px solid var(--line);
     border-radius:16px; padding:16px 18px; margin-bottom:14px;}
   .qty-summary .top{display:flex; justify-content:space-between; align-items:baseline; gap:12px; flex-wrap:wrap;}
-  .qty-summary .top span{font-size:12.5px; color:var(--sub);}
-  .qty-summary .top b{font-family:'Noto Serif KR','Nanum Myeongjo',ui-serif,Georgia,serif; font-size:23px; color:var(--accent);}
-  .chips{display:flex; flex-wrap:wrap; gap:6px 8px; margin-top:12px;}
-  .chip{background:var(--ink2); border:1px solid var(--line); border-radius:999px; padding:4px 11px; font-size:11.5px; color:var(--sub);}
-  .chip b{color:var(--text); font-weight:700;}
+  .qty-summary .top span{font-size:var(--fs-body); color:var(--sub);}
+  .qty-summary .top b{font-family:'Noto Serif KR',ui-serif,Georgia,serif; font-size:var(--fs-num); color:var(--text);}
+  .chips{display:flex; flex-wrap:wrap; gap:6px 8px; margin-top:11px;}
+  .chip{background:var(--ink2); border:1px solid var(--line); border-radius:999px; padding:4px 11px;
+    font-size:var(--fs-micro); color:var(--sub);}
+  .chip b{color:var(--text); font-weight:800;}
 
-  .qty-card{background:var(--ink3); border-radius:14px; padding:14px 16px; margin-bottom:10px;}
+  .qty-card{padding:15px 2px; border-bottom:1px solid var(--line);}
+  .qty-card:last-child{border-bottom:none;}
   .qty-top{display:flex; justify-content:space-between; align-items:flex-start; gap:14px; flex-wrap:wrap;}
-  .qty-top .nm{font-size:13.5px; font-weight:700; line-height:1.45; flex:1 1 200px;}
+  .qty-top .nm{font-size:var(--fs-label); font-weight:700; line-height:1.4; flex:1 1 190px;}
   .qty-top .rt{text-align:right; white-space:nowrap;}
-  .qty-big{font-size:21px; font-weight:800; color:var(--accent); line-height:1.15;}
-  .qty-meta{font-size:11.5px; color:var(--sub); margin-top:5px; line-height:1.6;}
-  .qty-rows{margin-top:10px;}
-  .qty-row{display:grid; grid-template-columns:minmax(130px,auto) 1fr; gap:3px 14px; align-items:baseline;
-    padding:6px 0; font-size:11.5px; color:var(--sub); border-top:1px dashed var(--line);}
+  .qty-big{font-size:var(--fs-num); font-weight:800; line-height:1.15;}
+  .qty-meta{font-size:var(--fs-micro); color:var(--sub); margin-top:5px; line-height:1.65;}
+  .qty-rows{margin-top:9px;}
+  .qty-row{display:grid; grid-template-columns:minmax(120px,auto) 1fr; gap:3px 14px; align-items:baseline;
+    padding:6px 0; font-size:var(--fs-micro); color:var(--sub); border-top:1px dashed var(--line);}
   .qty-row .r{text-align:right;}
-  @media (max-width:620px){ .qty-row{grid-template-columns:1fr;} .qty-row .r{text-align:left;} }
-  .qty-trend{margin-top:9px; font-size:11.5px; color:var(--sub); background:var(--ink2);
-    border-radius:10px; padding:8px 12px; line-height:1.7;}
-  .pill{background:var(--ink2); border-radius:6px; padding:1px 6px; font-size:10.5px; opacity:.85;}
-  .qty-row .pill{background:var(--ink);}
-  .jade{color:var(--jade);} .rustc{color:var(--rust);}
-  .warnbox{background:color-mix(in srgb, var(--pension) 15%, transparent);
-    border:1px solid color-mix(in srgb, var(--pension) 40%, transparent);
-    border-radius:12px; padding:11px 14px; font-size:12px; color:var(--text); margin-bottom:14px; line-height:1.65;}
-  .warnbox b{color:var(--pension);}
+  @media (max-width:620px){ .qty-row{grid-template-columns:1fr auto;} }
+  .qty-note{margin-top:9px; font-size:var(--fs-micro); color:var(--sub); line-height:1.7;
+    border-left:2px solid var(--line); padding:4px 0 4px 11px;}
+  .pill{background:var(--ink3); border-radius:6px; padding:1px 7px; font-size:11px; white-space:nowrap;}
+  .warnbox{background:color-mix(in srgb, var(--pension) 14%, transparent);
+    border:1px solid color-mix(in srgb, var(--pension) 42%, transparent);
+    border-radius:12px; padding:11px 14px; font-size:var(--fs-body); color:var(--text);
+    margin-bottom:14px; line-height:1.7;}
+  .warnbox b{color:var(--warn-ink);}
 
-  /* simulator */
-  .sim-row{margin-bottom:20px;}
-  .sim-row .row-head{display:flex; justify-content:space-between; font-size:13px; color:var(--sub); margin-bottom:8px;}
-  .sim-row .row-head b{color:var(--text); font-weight:700;}
-  input[type=range]{-webkit-appearance:none; width:100%; height:6px; border-radius:3px; background:var(--line); outline:none; margin:0;}
-  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none; width:20px; height:20px; border-radius:50%;
-    background:var(--accent); cursor:pointer; box-shadow:0 2px 8px rgba(0,0,0,.35); border:3px solid var(--ink2);}
-  input[type=range]::-moz-range-thumb{width:20px; height:20px; border-radius:50%; background:var(--accent); border:3px solid var(--ink2); cursor:pointer;}
-  .sim-result{background:linear-gradient(160deg,var(--ink3),var(--ink2)); border:1px solid var(--line); border-radius:18px;
-    padding:22px 24px; margin:18px 0; text-align:center;}
-  .sim-result .label{font-size:12.5px; color:var(--sub);}
-  .sim-result .amount{font-family:'Noto Serif KR','Nanum Myeongjo',ui-serif,Georgia,serif; font-size:34px; font-weight:700; color:var(--accent); margin-top:4px;}
+  /* ── 7. 시뮬레이터 ──────────────────────────────────────── */
+  .sim-row{margin-bottom:18px;}
+  .sim-row .row-head{display:flex; justify-content:space-between; gap:10px; font-size:var(--fs-body);
+    color:var(--sub); margin-bottom:8px; flex-wrap:wrap;}
+  .sim-row .row-head b{color:var(--text); font-weight:800;}
+  input[type=range]{-webkit-appearance:none; appearance:none; width:100%; height:6px; border-radius:3px;
+    background:var(--line); outline:none; margin:0;}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none; width:22px; height:22px; border-radius:50%;
+    background:var(--accent); cursor:pointer; box-shadow:0 2px 8px rgba(0,0,0,.3); border:3px solid var(--ink2);}
+  input[type=range]::-moz-range-thumb{width:22px; height:22px; border-radius:50%; background:var(--accent);
+    border:3px solid var(--ink2); cursor:pointer;}
+  .sim-result{background:linear-gradient(160deg,var(--ink3),var(--ink2)); border:1px solid var(--line);
+    border-radius:18px; padding:20px 22px; margin:16px 0; text-align:center;}
+  .sim-result .label{font-size:var(--fs-body); color:var(--sub);}
+  .sim-result .amount{font-family:'Noto Serif KR',ui-serif,Georgia,serif; font-size:32px; font-weight:700;
+    color:var(--accent); margin-top:3px; line-height:1.15;}
 
-  /* music button */
   .music-btn{
-    position:fixed; bottom:22px; right:22px; width:54px; height:54px; border-radius:50%;
-    background:var(--accent); color:#fff; border:none; font-size:22px; cursor:pointer;
-    box-shadow:0 8px 20px rgba(0,0,0,.35); z-index:80; transition:transform .15s ease;
+    position:fixed; bottom:22px; right:22px; width:52px; height:52px; border-radius:50%;
+    background:var(--accent); color:#fff; border:none; font-size:21px; cursor:pointer;
+    box-shadow:0 8px 20px rgba(0,0,0,.3); z-index:80;
   }
-  .music-btn:hover{transform:scale(1.08);}
-  .music-btn:active{transform:scale(.95);}
+  .music-btn:active{transform:scale(.94);}
+
+  /* ── 8. 의미색은 맨 마지막 — 앞의 어떤 색 규칙보다 뒤에 와야 이긴다 ── */
+  .up{color:var(--up);}
+  .down{color:var(--down);}
+  .cover .sub b.down, .entry .bd .down, tr.debt td.amt{color:var(--down);}
+
+  @media (prefers-reduced-motion: reduce){
+    *{transition:none !important; animation:none !important;}
+  }
 </style>
 </head>
 <body>
 <div class="ledger">
 <div class="wrap">
   <div class="masthead">
-    <div>
-      <div class="eyebrow">🩷 Family Ledger · 가족 자산통장</div>
-      <h1>우리 가족 자산 현황</h1>
-    </div>
+    <div class="eyebrow">🩷 가족 자산통장</div>
     <div class="updated" id="updated"></div>
   </div>
 
   <div class="family">
-    <div class="cap">우리 넷, 오늘도 자라는 중 🌱 <span style="opacity:.6">(들어올 때마다 다른 사진)</span></div>
+    <div class="cap">우리 넷, 오늘도 자라는 중 🌱</div>
     <div class="family-strip" id="familyStrip"></div>
   </div>
 
   <div class="cover">
-    <div class="label">💰 가족 전체 순자산</div>
+    <h1>💰 지금 우리 순자산</h1>
     <div class="amount num" id="totalNet">-</div>
+    <div class="exact num" id="totalNetExact"></div>
     <div class="sub">
-      <div>총자산 <b class="num" id="totalAssets">-</b></div>
-      <div>총부채 <b class="num rust" id="totalDebt">-</b></div>
+      <div>가진 것 <b class="num" id="totalAssets">-</b></div>
+      <div>갚을 것 <b class="num down" id="totalDebt">-</b></div>
     </div>
   </div>
 
   <div class="entries" id="memberCards"></div>
 
   <section class="panel">
-    <h2>🧩 자산 구성</h2>
+    <h2>🧩 무엇으로 갖고 있나</h2>
+    <div class="lede" id="compLede"></div>
     <div class="stackbar" id="stackbar"></div>
     <div class="comp-legend" id="compLegend"></div>
-  </section>
-
-  <section class="panel">
-    <h2>📦 가족 합산 보유 종목</h2>
-    <div id="holdingsList"></div>
-    <div class="callout">💡 S&amp;P500을 따라가는 상품이 계좌마다 다른 이름(KODEX·TIGER·SPY)으로 흩어져 있어요.
-      이름이 달라도 결국 같은 지수라서, <b>한데 묶은 금액과 보유수량은 아래 「종목별 보유수량 · 평단가」 칸</b>에 정리해뒀습니다.</div>
-    <div class="howto" style="margin-top:14px;">
-      이 표는 <b>가장 최근 잔액</b>을 기준으로 묶은 거예요. 계좌 개요 화면만 확인된 계좌는 "미분류"로 나옵니다.
-      종목별 <b>보유수량과 평단가</b>는 바로 아래 칸에서 따로 보실 수 있어요.
-    </div>
-  </section>
-
-  <section class="panel">
-    <h2>🔢 종목별 보유수량 · 평단가</h2>
-    <div id="qtySummary"></div>
-    <div id="qtyStale"></div>
-    <div id="qtyChanges"></div>
-    <div id="qtyList"></div>
-    <div id="qtyUnknown"></div>
-    <div class="howto" style="margin-top:14px;">
-      <b>왜 수량을 따로 적어두나요?</b> 평가금액만 보면 돈이 늘었을 때 <b>더 샀는지</b> <b>가격이 올랐는지</b> 구분이 안 돼요.
-      수량(주·좌)을 같이 남겨두면 <span class="num">평가금액 = 수량 × 단가</span>로 쪼갤 수 있어서, 다음 스크린샷이 들어오는 순간
-      "이번 증가분 중 얼마가 시세 덕이고 얼마가 추가매수인지"가 자동으로 갈라집니다.
-      평단가와 단가는 저장된 값이 아니라 <b>평가금액·평가손익·수량에서 계산</b>한 값이에요.
-    </div>
+    <div class="basis num" id="compBasis"></div>
   </section>
 
   <section class="panel">
@@ -242,7 +261,7 @@
       <input type="range" id="simMove" min="0" max="0" step="1000000" value="0">
     </div>
     <div class="sim-row">
-      <div class="row-head"><span>연간 추가 저축·투자액</span><b id="simContribLabel" class="num"></b></div>
+      <div class="row-head"><span>해마다 더 넣는 돈</span><b id="simContribLabel" class="num"></b></div>
       <input type="range" id="simContrib" min="0" max="100000000" step="1000000" value="0">
     </div>
 
@@ -251,9 +270,41 @@
       <div class="amount num" id="simNet">-</div>
     </div>
     <div class="comp-legend" id="simBreakdown"></div>
+    <div id="simChart" style="margin-top:16px;"></div>
 
     <div class="howto" style="margin-top:14px;">
-      <b>가정 (실제 통계 기반)</b> — 🏠 부동산 연 8.5% (서울 아파트 2002~2021 누적 약 420%·5.2배 상승의 복리 환산, 한국부동산원·언론 보도 기준) · 📈 주식/펀드 연 10% (S&P500 최근 30년 명목 연평균, Fidelity 기준) · 💵 채권 연 4% · 🏦 현금성 연 2% · ₿ 가상자산 연 0% (변동성이 너무 커서 과거 수익률로 미래를 예측하는 건 무의미하다고 보고 보수적으로 가정) · 🚗 자동차 연 0%. 부채는 변동 없다고 가정. 모두 참고용 역사적 평균이며 투자자문이 아니고, 실제 수익률은 이보다 낮거나 마이너스일 수 있습니다.
+      <b>연 수익률 가정</b> 🏠 8.5% · 📈 10% · 💵 4% · 🏦 2% · ₿ 0% · 🚗 0% —
+      과거 평균을 그대로 늘린 참고용 숫자예요. <b>투자 권유가 아니고, 실제 결과는 이보다 낮거나 마이너스일 수도 있어요.</b>
+      <details class="more">
+        <summary>이 숫자는 어디서 왔나요?</summary>
+        <div class="body">
+          🏠 <b>부동산 8.5%</b> — 서울 아파트가 2002~2021년에 약 5.2배 오른 걸 복리로 환산했어요 (한국부동산원·언론 보도 기준).<br>
+          📈 <b>주식·펀드 10%</b> — S&amp;P500 최근 30년 명목 연평균이에요 (Fidelity 기준).<br>
+          💵 <b>채권 4%</b> · 🏦 <b>현금성 2%</b> — 장기 평균으로 잡았어요.<br>
+          ₿ <b>가상자산 0%</b> — 변동성이 너무 커서 과거 수익률로 앞날을 점치는 건 무의미하다고 보고 그대로 뒀어요.<br>
+          🚗 <b>자동차 0%</b> — 감가상각을 단순하게 처리했어요.<br>
+          부채는 지금 금액 그대로 두고 계산했어요.
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <div class="zone-rule">📒 자세한 내역</div>
+
+  <section class="panel">
+    <h2>📦 종목별 보유 현황</h2>
+    <div id="qtySummary"></div>
+    <div id="qtyStale"></div>
+    <div id="qtyChanges"></div>
+    <div id="qtyList"></div>
+    <div id="qtyUnknown"></div>
+    <div class="howto" style="margin-top:14px;">
+      💡 수량을 남겨두면, 늘어난 돈이 <b>시세 덕</b>인지 <b>더 산 덕</b>인지 갈라 볼 수 있어요.
+      <details class="more">
+        <summary>평단가는 어떻게 나온 건가요?</summary>
+        <div class="body">앱이 알려준 값이 아니라 <b>평가금액 · 평가손익 · 수량</b>으로 그때그때 계산한 값이에요
+          (평가금액 = 수량 × 단가). 그래서 다음 스크린샷만 들어오면 이번 증가분이 시세인지 추가매수인지 자동으로 갈라져요.</div>
+      </details>
     </div>
   </section>
 
@@ -269,12 +320,14 @@
         <tbody id="detailBody"></tbody>
       </table>
     </div>
+    <div class="swipe">← 좌우로 밀면 나머지 칸이 보여요 · 메모는 눌러서 펼칠 수 있어요</div>
   </section>
 
-  <div class="howto">
-    <b>업데이트 방법</b> — 새 스크린샷은 가장에게 보내주시면 반영 후 이 페이지 파일을 다시 올려드립니다. 링크 주소는 바뀌지 않아요.
-    증권사 앱에서 <b>보유수량이 보이는 화면</b>(잔고 상세)을 찍어주시면 수량·평단가까지 같이 따라갑니다.
-  </div>
+  <details class="more howto">
+    <summary>📸 새 스크린샷 반영하는 법</summary>
+    <div class="body">새 스크린샷은 가장에게 보내주시면 반영 후 이 페이지를 다시 올려드려요. 링크 주소는 바뀌지 않아요.
+      증권사 앱에서 <b>보유수량이 보이는 잔고 상세 화면</b>을 찍어주시면 수량·평단가까지 같이 채워져요.</div>
+  </details>
   <footer class="priv">가족 재정 정보를 포함한 개인 페이지입니다. 링크를 아는 사람은 열람할 수 있으니 외부 공유는 주의해주세요.</footer>
 </div>
 </div>
@@ -291,14 +344,18 @@ const DATA = {
       "date": "2026-08-12", "member": "아빠", "source": "screenshots/아빠_20260812_토스자산.jpg",
       "accounts": [
         { "category": "입출금", "institution": "토스뱅크 연동", "name": "입출금 계좌 합계 (다수 계좌)", "balance": 31890876 },
-        { "category": "부채", "institution": "토스뱅크", "name": "신용 집단대출 (기업체일괄약정)", "balance": -70000000, "note": "표기금리 5.17%지만 회사 사내대출 이자지원으로 실제 이자는 회사 부담 중(사실상 무이자). 지원 3년 중 약 1.5년 남음, 종료 후 전액 상환 예정이라 조기상환 압박 없음" },
-        { "category": "부동산", "institution": "기타자산", "name": "자동차 2대", "balance": 33570000, "note": "2026-07-22 확인, 이전 값 유지" }
+        { "category": "부채", "institution": "토스뱅크", "name": "신용 집단대출 (기업체일괄약정)", "balance": -70000000,
+          "short": "회사가 이자 내주는 중 · 1.5년 남음",
+          "note": "표기금리 5.17%지만 회사 사내대출 이자지원으로 실제 이자는 회사 부담 중(사실상 무이자). 지원 3년 중 약 1.5년 남음, 종료 후 전액 상환 예정이라 조기상환 압박 없음" },
+        { "category": "부동산", "institution": "기타자산", "name": "자동차 2대", "balance": 33570000,
+          "short": "2026-07-22 확인값 그대로", "note": "2026-07-22 확인, 이후 스크린샷에 기타자산 섹션이 없어 이전 값 유지" }
       ]
     },
     {
       "date": "2026-08-15", "member": "아빠", "source": "screenshots/KakaoTalk_20260815_221951131.jpg",
       "accounts": [
         { "category": "투자", "institution": "토스 내투자 (연결계좌 종합)", "name": "국내·해외 주식 + 기타투자 + 예수금", "balance": 337959174,
+          "short": "장모님 위탁분은 빼고 계산",
           "note": "총 투자자산 742,688,596원 중 장모님 명의를 대신 운용 중인 자금 404,729,422원(SPY 122주 134,010,046 + 미국국채-토스증권 105,010,955 + 관련 예수금 165,708,421 = 2026-07-22 Toss 총자산 화면의 '토스증권 기본계좌·자산 제외' 항목과 동일 금액)은 본인 자산이 아니라서 제외. 뱅가드 채권ETF는 본인 소유라 유지",
           "holdings": [
             { "name": "KODEX 미국S&P500(H)", "value": 165546990, "shares": 9506, "unit": "주", "gain": 18901309 },
@@ -327,6 +384,7 @@ const DATA = {
       "date": "2026-08-11", "member": "엄마", "source": "screenshots/엄마_20260811_NH퇴직연금.jpg",
       "accounts": [
         { "category": "연금", "institution": "NH증권", "name": "DC·IRP 퇴직연금", "balance": 83504802,
+          "short": "위험자산 73.4% · 수량은 1~2일 늦게 반영",
           "note": "위험자산비율 73.39%. 상단 평가손익 +3,319,872는 총입금액 대비, 종목별 손익 합계 +1,884,545는 매입금액 대비 (기준이 달라 두 숫자가 다름). 수량·단가는 결제기준이라 실시간 시세보다 1~2일 늦음",
           "holdings": [
             { "name": "KODEX 미국S&P500(H)", "value": 61284780, "shares": 3636, "unit": "좌", "gain": 4875340 },
@@ -339,7 +397,7 @@ const DATA = {
       "date": "2026-08-11", "member": "엄마", "source": "screenshots/엄마_20260811_CMA주식계좌.jpg",
       "accounts": [
         { "category": "투자", "institution": "증권사 CMA (201-01-069752)", "name": "주식잔고", "balance": 95830235,
-          "note": "순자산 기준. 평가손익 +5,653,480 (+6.27%). 앱 표시 매입가 15,940 / 현재가 16,940",
+          "short": "순자산 기준", "note": "순자산 기준. 앱 표시 매입가 15,940 / 현재가 16,940",
           "holdings": [
             { "name": "KODEX 미국S&P500(H)", "value": 95812640, "shares": 5656, "unit": "주", "gain": 5653480 },
             { "name": "예수금(현금)", "value": 17595 }
@@ -350,23 +408,27 @@ const DATA = {
       "date": "2026-08-11", "member": "공동(아빠+엄마 지분반반)", "source": "manual",
       "accounts": [
         { "category": "부동산", "institution": "소유부동산", "name": "올림픽파크 포레온 49㎡ (강동구 둔촌동)",
-          "balance": 2300000000, "note": "사용자 제공 추정 시세. 실거래가 자동조회 실패로 수동 입력값 사용" },
-        { "category": "부채", "institution": "전세보증금(임대)", "name": "올림픽파크 포레온 전세보증금 - 세입자에게 반환 예정",
-          "balance": -450000000, "note": "포레온을 세입자에게 전세로 임대, 계약 종료시 반환 의무" }
+          "balance": 2300000000, "short": "직접 입력한 추정 시세",
+          "note": "사용자 제공 추정 시세(2026-08-11 입력). 실거래가 자동조회 실패로 수동 입력값 사용" },
+        { "category": "부채", "institution": "전세보증금(임대)", "name": "포레온 전세보증금 · 세입자에게 줄 돈",
+          "balance": -450000000, "short": "계약 끝나면 돌려줄 돈",
+          "note": "포레온을 세입자에게 전세로 임대, 계약 종료시 반환 의무" }
       ]
     },
     {
       "date": "2026-08-11", "member": "엄마", "source": "manual",
       "accounts": [
-        { "category": "부동산", "institution": "거주부동산 전세보증금", "name": "수원 삼성태영아파트 전세보증금 (거주지)",
-          "balance": 280000000, "note": "엄마 명의. 우리 가족이 거주 중, 계약 종료시 돌려받을 자산" }
+        { "category": "부동산", "institution": "거주부동산 전세보증금", "name": "수원 삼성태영아파트 전세보증금 · 우리가 받을 돈",
+          "balance": 280000000, "short": "우리가 사는 집 · 나중에 돌려받아요",
+          "note": "엄마 명의. 우리 가족이 거주 중, 계약 종료시 돌려받을 자산" }
       ]
     },
     {
       "date": "2026-08-11", "member": "시우", "source": "screenshots/시우_20260811_키움해외잔고.jpg",
       "accounts": [
         { "category": "투자", "institution": "키움증권 (해외증권 6322-8982)", "name": "해외주식 잔고", "balance": 20812277,
-          "note": "평가금액 기준. 평가손익 +2,112,409 (+11.35%). 달러 기준 매입 $13,119.40 → 평가 $14,678.76, 환산환율 약 1,418원/$",
+          "short": "달러로 산 주식이라 환율도 같이 움직여요",
+          "note": "평가금액 기준. 달러 기준 매입 $13,119.40 → 평가 $14,678.76, 환산환율 약 1,418원/$",
           "holdings": [ { "name": "SPY (S&P500 SPDR ETF)", "value": 20812277, "shares": 19, "unit": "주", "gain": 2112409, "usd": { "value": 14678.7578, "cost": 13119.40 } } ] }
       ]
     },
@@ -374,7 +436,7 @@ const DATA = {
       "date": "2026-08-11", "member": "시아", "source": "screenshots/시아_20260811_증권사잔고.jpg",
       "accounts": [
         { "category": "투자", "institution": "증권사 종합매매 (207-01-572717)", "name": "주식잔고", "balance": 25697709,
-          "note": "순자산 기준. 평가손익 +4,594,500 (+44.66%). 앱 표시 매입가 17,142 / 현재가 24,800",
+          "short": "순자산 기준", "note": "순자산 기준. 앱 표시 매입가 17,142 / 현재가 24,800",
           "holdings": [
             { "name": "KODEX 미국S&P500", "value": 14880000, "shares": 600, "unit": "주", "gain": 4594500 },
             { "name": "예수금(현금)", "value": 10817709 }
@@ -385,7 +447,6 @@ const DATA = {
       "date": "2026-08-16", "member": "아빠", "source": "screenshots/Screenshot_20260816_061532_Upbit.jpg",
       "accounts": [
         { "category": "투자", "institution": "Upbit", "name": "가상자산", "balance": 57177356,
-          "note": "총매수 89,865,243원 대비 평가손익 -32,690,339원 (-36.38%)",
           "holdings": [
             { "name": "비트코인(BTC)", "value": 57174903, "gain": -32690339, "note": "업비트 화면 하단이 잘려 보유수량(BTC 개수) 미확인" },
             { "name": "예수금(현금)", "value": 2453 }
@@ -396,15 +457,16 @@ const DATA = {
       "accounts": [
         { "category": "입출금", "institution": "토스뱅크 연동", "name": "입출금 계좌 합계 (다수 계좌)", "balance": 33157363 },
         { "category": "투자", "institution": "토스 내투자 (연결계좌 종합)", "name": "국내·해외 주식 + 기타투자 + 예수금", "balance": 295827184,
-          "note": "이번 스크린샷은 계좌별 합계만 표시돼 종목별 상세내역 없음 (수량 섹션은 상세가 남아있는 8/15 스냅샷 사용). 토스증권 기본계좌 398,059,602원(+12.6%, 장모님 명의를 대신 운용 중인 SPY+미국채+예수금)은 본인 자산 아니라서 제외" },
+          "short": "계좌 합계만 확인 · 장모님 위탁분 제외",
+          "note": "토스증권 기본계좌 398,059,602원(+12.6%, 장모님 명의를 대신 운용 중인 SPY+미국채+예수금)은 본인 자산 아니라서 제외" },
         { "category": "연금", "institution": "토스 내투자 (연결계좌 종합)", "name": "연금저축계좌(신)", "balance": 34456797,
+          "short": "앱에선 빠져 있지만 우리 자산이라 포함",
           "note": "본인 소유 자산 맞음. Toss 앱 화면엔 '자산 제외'로 뜨지만 이는 유동성 낮은 장기 자산이라 사용자가 앱 내 총액 집계에서 임의로 뺀 것 (2026-08-23 확인) — 가족 자산엔 포함" }
       ]
     },
     { "date": "2026-08-21", "member": "아빠", "source": "screenshots/Screenshot_20260821_110354_Upbit.jpg",
       "accounts": [
         { "category": "투자", "institution": "Upbit", "name": "가상자산", "balance": 66085000,
-          "note": "총매수 89,865,243원 대비 평가손익 -23,782,694원 (-26.46%)",
           "holdings": [
             { "name": "비트코인(BTC)", "value": 66082547, "gain": -23782694, "note": "업비트 화면 하단이 잘려 보유수량(BTC 개수) 미확인" },
             { "name": "예수금(현금)", "value": 2453 }
@@ -416,12 +478,36 @@ const DATA = {
 
 const CAT_HEX = { "입출금":"var(--cash)", "저축":"var(--save)", "투자":"var(--invest)",
   "연금":"var(--pension)", "부동산":"var(--realty)", "부채":"var(--debt)" };
+const CAT_LABEL = { "부동산":"부동산·자동차" };
 const MEMBER_EMOJI = { "아빠":"👨", "엄마":"👩", "시아":"👧", "시우":"👦" };
-const MEMBER_COLOR = { "아빠":"var(--cash)", "엄마":"var(--invest)", "시아":"var(--pension)", "시우":"var(--realty)" };
 
+// ── 숫자 표기 규칙 ───────────────────────────────────────────
+//   won()      : 원 단위 그대로. 원장 검증이 필요한 곳(계좌별 상세, 소액)에만.
+//   wonShort() : 억/만 축약. 합계·비교용 큰 숫자.
+//   priceStr() : 주당 가격. 절대 축약하지 않는다.
 function won(n){
-  const sign = n < 0 ? "-" : "";
-  return sign + Math.abs(Math.round(n)).toLocaleString('ko-KR') + "원";
+  return (n<0?'−':'') + Math.abs(Math.round(n)).toLocaleString('ko-KR') + "원";
+}
+function wonShort(n){
+  const sign = n<0 ? '−' : '', a = Math.abs(Math.round(n));
+  if(a >= 1e8){
+    let e = Math.floor(a/1e8), m = Math.round((a - e*1e8)/1e4);
+    if(m >= 10000){ e += 1; m = 0; }              // 9,999.6만 → 1억으로 올림
+    return sign + e.toLocaleString('ko-KR') + '억' + (m ? ' ' + m.toLocaleString('ko-KR') + '만' : '');
+  }
+  if(a >= 1e4) return sign + Math.round(a/1e4).toLocaleString('ko-KR') + '만원';
+  return sign + a.toLocaleString('ko-KR') + '원';
+}
+// 100만원 넘으면 만 단위로 줄이고, 그 아래는 원 단위 그대로 둔다.
+// (+25,000원을 '3만원'으로 반올림하면 사실이 아니게 된다)
+function gainAmt(n){ return Math.abs(n) >= 1e6 ? wonShort(n) : won(n); }
+function pctStr(gain, cost){
+  if(!cost) return '';
+  const p = gain/cost*100;
+  return (p>=0?'+':'−') + Math.abs(p).toFixed(1) + '%';   // 빼기부호를 wonShort와 같은 −로 맞춘다
+}
+function gainSpan(gain, cost){
+  return `<span class="${gain>=0?'up':'down'}">${gain>=0?'+':''}${gainAmt(gain)} ${pctStr(gain,cost)}</span>`;
 }
 
 // ── 가족사진: 매번 무작위로 몇 장 뽑아 보여주기 ──
@@ -433,8 +519,7 @@ function won(n){
     const j = Math.floor(Math.random() * (i + 1));
     [pool[i], pool[j]] = [pool[j], pool[i]];
   }
-  const picked = pool.slice(0, SHOW);
-  document.getElementById('familyStrip').innerHTML = picked.map(src =>
+  document.getElementById('familyStrip').innerHTML = pool.slice(0, SHOW).map(src =>
     `<img src="${src}" alt="가족사진" loading="lazy" onerror="this.style.display='none'">`
   ).join('');
 })();
@@ -443,7 +528,8 @@ const flat = [];
 DATA.snapshots.forEach(snap=>{
   snap.accounts.forEach(acc=>{
     flat.push({date:snap.date, member:snap.member, category:acc.category,
-      institution:acc.institution, name:acc.name, balance:acc.balance, note:acc.note||"", holdings:acc.holdings||null});
+      institution:acc.institution, name:acc.name, balance:acc.balance,
+      note:acc.note||"", short:acc.short||"", holdings:acc.holdings||null});
   });
 });
 
@@ -463,8 +549,7 @@ flat.slice().sort((a,b)=>a.date.localeCompare(b.date)).forEach(r=>{
 // ── 일일 시세 반영: 주식/가상자산 보유종목을 최신 시장가 기준으로 스케일 ──
 // 매일 클라우드 스케줄러가 MARKET_LIVE만 갱신함. MARKET_ANCHOR는 이 기능 도입 기준일 값으로 고정.
 // 시세가 움직여도 보유수량(shares)은 그대로다 — 평가금액만 옮기고, 매입원가는 고정이니
-// 평가손익(gain)은 새 평가금액에서 다시 뺀다. current뿐 아니라 수량 표시에 쓰는
-// detailLatest 행도 같이 손봐야 두 섹션의 단가가 어긋나지 않는다.
+// 평가손익(gain)은 새 평가금액에서 다시 뺀다.
 const MARKET_ANCHOR = { date: "2026-08-23", spy: 767.00, btcKrw: 106570000 };
 const MARKET_LIVE   = { date: "2026-08-23", spy: 767.00, btcKrw: 106570000 };
 const marketRatio = { equity: MARKET_LIVE.spy / MARKET_ANCHOR.spy, crypto: MARKET_LIVE.btcKrw / MARKET_ANCHOR.btcKrw };
@@ -515,76 +600,52 @@ current.forEach(row=>{
 let totalAsset=0, totalDebt=0;
 current.forEach(r=>{ if(r.balance<0) totalDebt += -r.balance; else totalAsset += r.balance; });
 
-document.getElementById('totalNet').textContent = won(totalAsset-totalDebt);
-document.getElementById('totalAssets').textContent = won(totalAsset);
-document.getElementById('totalDebt').textContent = won(totalDebt);
+document.getElementById('totalNet').textContent = wonShort(totalAsset-totalDebt);
+document.getElementById('totalNetExact').textContent = won(totalAsset-totalDebt);
+document.getElementById('totalAssets').textContent = wonShort(totalAsset);
+document.getElementById('totalDebt').textContent = wonShort(totalDebt);
 
 const lastDate = current.map(r=>r.date).sort().slice(-1)[0];
-document.getElementById('updated').textContent = "마지막 반영 " + lastDate + " · 시세 갱신 " + MARKET_LIVE.date + " · 구성원 " + members.length + "명";
+document.getElementById('updated').innerHTML =
+  "마지막 반영 " + lastDate + "<br>시세 갱신 " + MARKET_LIVE.date + " · 구성원 " + members.length + "명";
 
 const mc = document.getElementById('memberCards');
 members.forEach(m=>{
   const t = memberTotals[m] || {asset:0,debt:0};
-  const net = t.asset - t.debt;
   const div = document.createElement('div');
   div.className='entry';
   div.innerHTML = `<div class="who">${MEMBER_EMOJI[m]||'💗'} ${m}<span class="tag">♥</span></div>
-    <div class="net num">${won(net)}</div>
-    <div class="bd">자산 <span class="num">${won(t.asset)}</span><br>부채 <span class="num rust">${won(t.debt)}</span></div>`;
+    <div class="net num">${wonShort(t.asset - t.debt)}</div>
+    ${t.debt>0 ? `<div class="bd">가진 것 <span class="num">${wonShort(t.asset)}</span> · 갚을 것 <span class="num down">${wonShort(t.debt)}</span></div>` : ''}`;
   mc.appendChild(div);
 });
 
+// ── 자산 구성 ──
 const catTotals = {};
 current.forEach(r=>{ if(r.balance<0) return; catTotals[r.category] = (catTotals[r.category]||0) + r.balance; });
 const catEntries = Object.entries(catTotals).filter(([,v])=>v>0).sort((a,b)=>b[1]-a[1]);
 const catSum = catEntries.reduce((s,[,v])=>s+v,0);
+const realtyPct = (catTotals['부동산']||0)/catSum*100;
 
+document.getElementById('compLede').innerHTML =
+  `🏠 <b>10원 중 ${Math.round(realtyPct/10)}원이 집</b>이에요 — 부동산이 ${realtyPct.toFixed(1)}%, 나머지가 투자·연금·현금.`;
 document.getElementById('stackbar').innerHTML = catEntries.map(([cat,val])=>
-  `<div style="width:${(val/catSum*100).toFixed(2)}%;background:${CAT_HEX[cat]}" title="${cat}"></div>`
+  `<div style="width:max(6px, ${(val/catSum*100).toFixed(2)}%);background:${CAT_HEX[cat]}" title="${cat}"></div>`
 ).join('');
 document.getElementById('compLegend').innerHTML = catEntries.map(([cat,val])=>
-  `<span><span class="dot" style="background:${CAT_HEX[cat]}"></span>${cat} <b class="num">${won(val)}</b> (${(val/catSum*100).toFixed(1)}%)</span>`
+  `<span><span class="dot" style="background:${CAT_HEX[cat]}"></span>${CAT_LABEL[cat]||cat}
+    <b class="num">${(val/catSum*100).toFixed(1)}%</b> <span class="num">${wonShort(val)}</span></span>`
 ).join('');
+// 조사(은/는)를 피하려고 수식으로 적는다 — 축약 숫자는 끝 글자가 매번 달라진다
+document.getElementById('compBasis').textContent =
+  `가진 것 ${wonShort(catSum)} − 갚을 것 ${wonShort(totalDebt)} = 순자산 ${wonShort(catSum-totalDebt)}`;
 
-// ── 가족 합산 보유 종목 ──
-const holdingsAgg = {};
-current.forEach(r=>{
-  if(r.balance<0) return;
-  if(r.category!=='투자' && r.category!=='연금') return;
-  if(r.holdings && r.holdings.length){
-    r.holdings.forEach(h=>{
-      if(!holdingsAgg[h.name]) holdingsAgg[h.name]={total:0, byMember:{}};
-      holdingsAgg[h.name].total += h.value;
-      holdingsAgg[h.name].byMember[r.member] = (holdingsAgg[h.name].byMember[r.member]||0) + h.value;
-    });
-  } else {
-    const key = `${r.institution} · ${r.name} (미분류)`;
-    if(!holdingsAgg[key]) holdingsAgg[key]={total:0, byMember:{}};
-    holdingsAgg[key].total += r.balance;
-    holdingsAgg[key].byMember[r.member] = (holdingsAgg[key].byMember[r.member]||0) + r.balance;
-  }
-});
-const holdingsSorted = Object.entries(holdingsAgg).sort((a,b)=>b[1].total-a[1].total);
-document.getElementById('holdingsList').innerHTML = holdingsSorted.map(([name,agg])=>{
-  const members = Object.entries(agg.byMember).sort((a,b)=>b[1]-a[1]);
-  const segs = members.map(([m,v])=>`<div style="width:${(v/agg.total*100).toFixed(2)}%;background:${MEMBER_COLOR[m]||'var(--sub)'}"></div>`).join('');
-  const memberList = members.map(([m,v])=>`<span>${MEMBER_EMOJI[m]||''} ${m} ${won(v)}</span>`).join('');
-  return `<div class="holding-card">
-    <div class="holding-head"><span class="name">${name}</span><b class="num">${won(agg.total)}</b></div>
-    <div class="stackbar" style="height:10px;">${segs}</div>
-    <div class="holding-members">${memberList}</div>
-  </div>`;
-}).join('');
-
-// S&P500 계열 합계는 종목명이 계좌마다 달라서(KODEX·TIGER·SPY) 이름 매칭으로 묶어야 한다.
-// 정확한 금액·수량은 아래 '종목별 보유수량' 칸에서 계산하므로 여기서는 안내만 한다.
-
-// ── 종목별 보유수량 · 평단가 ─────────────────────────────────────────────
+// ── 종목별 보유 현황 ────────────────────────────────────────
 // 앱에 찍힌 보유수량을 남겨두면 평가금액 = 수량 × 단가로 쪼갤 수 있고,
 // 그래야 평가액 변화가 "추가매수" 때문인지 "시세" 때문인지 갈라진다.
-// 평단가·단가·수익률은 저장하지 않고 value/gain/shares에서 매번 계산한다.
 const CASH_RE = /예수금|현금/;
-const SP_RE = /S&P\s*500|SPY/i;
+// 배당귀족은 S&P500 지수가 아니라 그 안의 배당주만 골라 담는 다른 지수라 합계에서 제외한다.
+const SP_RE = /S&P\s*500(?!배당)|SPY/i;
 
 function holdingRowsOf(rows){
   const out = [];
@@ -598,7 +659,6 @@ function holdingRowsOf(rows){
   return out;
 }
 
-// 최신 스냅샷에 종목 상세가 없는 계좌는, 상세가 남아있는 가장 최근 스냅샷(detailLatest)을 쓴다
 const detailRows = holdingRowsOf(Array.from(detailLatest.values()));
 
 function costOf(h){ return h.value - (h.gain||0); }
@@ -612,13 +672,16 @@ function qtyStr(s, unit){
   const u = unit || '주';
   return (s<1 ? String(s) : s.toLocaleString('ko-KR',{maximumFractionDigits:4})) + u;
 }
-function pctStr(gain, cost){
-  if(!cost) return '';
-  const p = gain/cost*100;
-  return (p>=0?'+':'') + p.toFixed(1) + '%';
+// 같은 상품이라도 계좌에 따라 '주'와 '좌'로 세는 곳이 있어서, 단위를 섞어 더하면 안 된다.
+// 퇴직연금(NH)은 좌, 일반 증권계좌는 주로 표기한다.
+function qtyByUnit(rows){
+  const byUnit = {};
+  rows.filter(hasQty).forEach(h=>{ const u=h.unit||'주'; byUnit[u] = (byUnit[u]||0) + h.shares; });
+  return byUnit;
 }
-function gainSpan(gain, cost){
-  return `<span class="${gain>=0?'jade':'rustc'}">${gain>=0?'+':''}${won(gain)} ${pctStr(gain,cost)}</span>`;
+function qtyLabelOf(rows){
+  const b = qtyByUnit(rows);
+  return Object.keys(b).map(u=>qtyStr(b[u],u)).join(' + ');
 }
 
 const qtyAgg = {};
@@ -628,20 +691,6 @@ detailRows.forEach(h=>{
   a.cost  += costOf(h);
   if(hasQty(h)){ a.shares += h.shares; a.known = true; a.unit = h.unit || a.unit; }
   a.rows.push(h);
-});
-
-// 같은 종목의 시점별 환산단가(= 평가금액 ÷ 수량). 같은 날 여러 계좌면 수량가중 평균.
-const priceHist = {};
-holdingRowsOf(flat).forEach(h=>{
-  if(!hasQty(h)) return;
-  const byName = priceHist[h.name] || (priceHist[h.name] = {});
-  const d = byName[h.date] || (byName[h.date] = {value:0, shares:0});
-  d.value += h.value; d.shares += h.shares;
-});
-const priceSeries = {};
-Object.entries(priceHist).forEach(([name, byDate])=>{
-  priceSeries[name] = Object.entries(byDate).sort((a,b)=>a[0].localeCompare(b[0]))
-    .map(([date,d])=>({date, price:d.value/d.shares}));
 });
 
 // 같은 계좌·같은 종목이 두 시점 이상 찍혔으면 평가액 변화를 매매효과 / 시세효과로 분해
@@ -657,313 +706,265 @@ Object.values(byAccountHolding).forEach(arr=>{
   arr.sort((a,b)=>a.date.localeCompare(b.date));
   const a0 = arr[arr.length-2], a1 = arr[arr.length-1];
   if(a0.date === a1.date) return;
-  let trade=null, price=null, basis='';
+  let trade=null, price=null;
   if(hasQty(a0) && hasQty(a1)){
     const p0 = a0.value/a0.shares, p1 = a1.value/a1.shares;
     trade = (a1.shares - a0.shares) * p1;
     price = a0.shares * (p1 - p0);
-    basis = '수량 기준';
   } else if(a0.gain!=null && a1.gain!=null){
     // 수량은 몰라도 매입원가가 그대로면 사고판 게 없다는 뜻이라 전액 시세 효과
     const c0 = costOf(a0), c1 = costOf(a1);
     if(Math.abs(c1-c0) > Math.max(100, c0*0.0001)) return;
     trade = 0; price = a1.value - a0.value;
-    basis = '매입원가 불변 → 매매 없음';
   } else return;
-  qtyChanges.push({name:a1.name, member:a1.member, institution:a1.institution, a0, a1, trade, price, basis});
+  qtyChanges.push({name:a1.name, member:a1.member, institution:a1.institution, a0, a1, trade, price});
 });
 
 const qtySorted = Object.entries(qtyAgg).sort((a,b)=>b[1].value-a[1].value);
+const MICRO = 1000000;
 const withQty = qtySorted.filter(([,a])=>a.known);
 const noQty   = qtySorted.filter(([,a])=>!a.known);
+const microQty = withQty.filter(([,a])=>a.value <  MICRO);   // 소수점으로 담은 자잘한 것들
+const cardList = withQty.filter(([,a])=>a.value >= MICRO)
+  .concat(noQty.filter(([,a])=>a.value >= MICRO))            // 비트코인: 수량은 몰라도 6,600만원이라 카드로
+  .sort((x,y)=>y[1].value-x[1].value);
+const tinyNoQty = noQty.filter(([,a])=>a.value < MICRO);
 
 // 요약: S&P500 계열은 상품이 달라도 결국 같은 지수를 산 것 → 수량까지 한 줄로
 (function renderQtySummary(){
-  const spNames = withQty.filter(([n])=>SP_RE.test(n));
   const spAll = detailRows.filter(h=>SP_RE.test(h.name));
   const spValue = spAll.reduce((s,h)=>s+h.value,0);
   const spCost  = spAll.reduce((s,h)=>s+costOf(h),0);
-  const knownCount = withQty.length, totalCount = qtySorted.length;
-  const chips = spNames.map(([n,a])=>`<span class="chip">${n} <b class="num">${qtyStr(a.shares,a.unit)}</b></span>`).join('');
+  const chips = withQty.filter(([n])=>SP_RE.test(n))
+    .map(([n,a])=>`<span class="chip">${n} <b class="num">${qtyLabelOf(a.rows)}</b></span>`).join('');
+
+  const cashRows = Array.from(detailLatest.values())
+    .filter(r=>r.balance>0 && (r.category==='투자'||r.category==='연금'))
+    .flatMap(r=>(r.holdings||[]).filter(h=>CASH_RE.test(h.name)).map(h=>({member:r.member, value:h.value})));
+  const cashSum = cashRows.reduce((s,h)=>s+h.value,0);
+  const cashChip = cashSum ? `<span class="chip">💵 아직 안 굴린 현금 <b class="num">${wonShort(cashSum)}</b></span>` : '';
+
+  const basisDate = Array.from(new Set(detailRows.map(h=>h.date))).sort().slice(-1)[0];
   document.getElementById('qtySummary').innerHTML = `
     <div class="qty-summary">
       <div class="top">
-        <span>📈 S&amp;P500 지수를 따라가는 종목, 가족 전체 합계</span>
-        <b class="num">${won(spValue)}</b>
+        <span>📈 S&amp;P500 지수를 따라가는 종목, 다 합치면</span>
+        <b class="num">${wonShort(spValue)}</b>
       </div>
-      <div class="chips">${chips}</div>
-      <div class="qty-meta">매입 <span class="num">${won(spCost)}</span> → 평가 <span class="num">${won(spValue)}</span> ${gainSpan(spValue-spCost, spCost)}
-        · 종목 ${totalCount}개 중 <b style="color:var(--text)">${knownCount}개</b>의 보유수량이 확인됐어요</div>
+      <div class="chips">${chips}${cashChip}</div>
+      <div class="qty-meta">매입 <span class="num">${wonShort(spCost)}</span> ${gainSpan(spValue-spCost, spCost)}
+        · 이 칸의 금액은 <b style="color:var(--text)">종목 목록이 보인 마지막 화면</b>(${basisDate}까지) 기준이라,
+        맨 위 순자산(${lastDate} 잔액)과는 계좌에 따라 차이가 있어요.</div>
     </div>`;
 })();
 
-// 최신 잔액과 종목 상세의 기준일이 다른 계좌는 눈에 띄게 알려준다
+// 최신 잔액과 종목 상세의 기준일이 다른 계좌 — 두 금액은 검산의 유일한 다리라 반드시 남긴다
 (function renderStale(){
   const stale = current.filter(r=>{
     const d = detailLatest.get(r.member+"|"+r.institution+"|"+r.name);
     return d && d.date < r.date;
   }).map(r=>({r, d:detailLatest.get(r.member+"|"+r.institution+"|"+r.name)}));
-  if(!stale.length){ document.getElementById('qtyStale').innerHTML=''; return; }
   document.getElementById('qtyStale').innerHTML = stale.map(({r,d})=>`
     <div class="warnbox">⚠️ <b>${MEMBER_EMOJI[r.member]||''} ${r.member} · ${r.institution}</b> —
-      계좌 잔액은 <span class="num">${mmdd(r.date)} 기준 ${won(r.balance)}</span>인데,
-      종목별 수량은 마지막으로 상세가 보인 <span class="num">${mmdd(d.date)} 기준 ${won(d.balance)}</span> 화면에서 가져왔어요.
-      아래 수량은 그 사이 매매가 있었다면 달라질 수 있습니다 — 다음에 <b>종목 리스트가 보이는 화면</b>으로 찍어주시면 맞춰집니다.</div>`).join('');
+      잔액은 <b>${mmdd(r.date)}</b> 기준 <span class="num">${wonShort(r.balance)}</span>인데,
+      아래 수량은 <b>${mmdd(d.date)}</b> 화면(<span class="num">${wonShort(d.balance)}</span>) 기준이에요.
+      그 사이 매매가 있었다면 수량이 다를 수 있어요.</div>`).join('');
 })();
 
 // 시세 효과 vs 매매 효과 분해
 (function renderChanges(){
-  const el = document.getElementById('qtyChanges');
-  if(!qtyChanges.length){ el.innerHTML=''; return; }
-  el.innerHTML = qtyChanges.sort((a,b)=>Math.abs(b.a1.value-b.a0.value)-Math.abs(a.a1.value-a.a0.value)).map(c=>{
+  document.getElementById('qtyChanges').innerHTML = qtyChanges
+    .sort((a,b)=>Math.abs(b.a1.value-b.a0.value)-Math.abs(a.a1.value-a.a0.value)).map(c=>{
     const delta = c.a1.value - c.a0.value;
-    const dq = (hasQty(c.a0)&&hasQty(c.a1)) ? c.a1.shares - c.a0.shares : null;
     return `<div class="qty-card">
       <div class="qty-top">
-        <div class="nm">🔍 ${c.name} <span class="pill">${MEMBER_EMOJI[c.member]||''} ${c.member} · ${c.institution}</span></div>
-        <div class="rt"><div class="qty-big num" style="color:${delta>=0?'var(--jade)':'var(--rust)'}">${delta>=0?'+':''}${won(delta)}</div>
-          <div class="qty-meta">${mmdd(c.a0.date)} → ${mmdd(c.a1.date)}</div></div>
+        <div class="nm">🔍 ${c.name} <span class="pill">${MEMBER_EMOJI[c.member]||''} ${c.member} · ${mmdd(c.a0.date)}→${mmdd(c.a1.date)}</span></div>
+        <div class="rt"><div class="qty-big num ${delta>=0?'up':'down'}">${delta>=0?'+':''}${gainAmt(delta)}</div></div>
       </div>
-      <div class="qty-trend">
-        평가액 변화를 쪼개보면 —
-        <b class="num" style="color:var(--text)">시세 ${c.price>=0?'+':''}${won(c.price)}</b>
-        · <b class="num" style="color:var(--text)">매매 ${c.trade>=0?'+':''}${won(c.trade)}</b>
-        <span class="pill">${c.basis}</span><br>
+      <div class="qty-note">
         ${c.trade===0
-          ? `이 기간엔 <b style="color:var(--text)">사거나 판 게 없어요.</b> 늘어난 ${won(Math.abs(delta))}은 전부 시세 변동입니다
-             (<span class="num">${(delta/c.a0.value*100).toFixed(2)}%</span>).`
-          : `보유수량이 <span class="num">${qtyStr(c.a0.shares,c.a0.unit)} → ${qtyStr(c.a1.shares,c.a1.unit)}</span>
-             (${dq>=0?'+':''}<span class="num">${qtyStr(Math.abs(dq),c.a1.unit)}</span> ${dq>=0?'추가매수':'매도'}),
-             단가가 <span class="num">${priceStr(c.a0.value/c.a0.shares)} → ${priceStr(c.a1.value/c.a1.shares)}</span>로 움직였어요.`}
+          ? `사고판 것 없이 <b style="color:var(--text)">시세로만</b> 움직였어요 <span class="num">(${(delta/c.a0.value*100).toFixed(1)}%)</span>`
+          : `<b class="num" style="color:var(--text)">시세 ${c.price>=0?'+':''}${gainAmt(c.price)}</b>
+             · <b class="num" style="color:var(--text)">매매 ${c.trade>=0?'+':''}${gainAmt(c.trade)}</b><br>
+             수량 <span class="num">${qtyStr(c.a0.shares,c.a0.unit)} → ${qtyStr(c.a1.shares,c.a1.unit)}</span>`}
       </div>
     </div>`;
   }).join('');
 })();
 
 // 종목 카드
-document.getElementById('qtyList').innerHTML = withQty.map(([name, a])=>{
+document.getElementById('qtyList').innerHTML = cardList.map(([name, a])=>{
   const gain = a.value - a.cost;
-  const avg = a.cost / a.shares;
-  // 현재 단가는 '가장 최근 시점' 행에서만 뽑는다. 계좌마다 스크린샷 날짜가 달라서
-  // 전체를 평균내면 오래된 단가가 섞여버리고, 표시 중인 평가금액에서 직접 뽑아야 시세 반영과도 어긋나지 않는다.
+  const single = a.rows.length === 1;
+  const h0 = a.rows[0];
   const qtyRows = a.rows.filter(hasQty);
-  const markDate = qtyRows.map(h=>h.date).sort().slice(-1)[0];
-  const markRows = qtyRows.filter(h=>h.date===markDate);
-  const mark = markRows.reduce((s,h)=>s+h.value,0) / markRows.reduce((s,h)=>s+h.shares,0);
-  const series = priceSeries[name] || [];
-  const multi = qtyRows.length > 1;
 
-  const rows = a.rows.slice().sort((x,y)=>y.value-x.value).map(h=>{
+  const units = Object.keys(qtyByUnit(a.rows));
+  const qtyLabel = a.known ? qtyLabelOf(a.rows) : `<span class="pill">수량 미확인</span>`;
+
+  let priceBit = '';
+  if(a.known){
+    const markDate = qtyRows.map(h=>h.date).sort().slice(-1)[0];
+    const markRows = qtyRows.filter(h=>h.date===markDate);
+    const mark = markRows.reduce((s,h)=>s+h.value,0) / markRows.reduce((s,h)=>s+h.shares,0);
+    const avg = units.length===1 ? a.cost / a.shares : null;
+    priceBit = `${avg!==null ? `평단 <b class="num" style="color:var(--text)">${priceStr(avg)}</b> · ` : ''}`
+      + `현재 <b class="num" style="color:var(--text)">${priceStr(mark)}</b> <span class="pill">${mmdd(markDate)}</span>`;
+  }
+
+  const soleTag = single
+    ? `<span class="pill" title="${h0.institution}">${MEMBER_EMOJI[h0.member]||''} ${h0.member} · ${mmdd(h0.date)}</span>` : '';
+
+  const rows = single ? '' : a.rows.slice().sort((x,y)=>y.value-x.value).map(h=>{
     const g = h.gain||0, c = costOf(h);
     const coarse = hasQty(h) && h.shares < 0.01;
-    const qty = hasQty(h)
-      ? `<b class="num" style="color:var(--text)">${qtyStr(h.shares,h.unit)}</b> · 평단 <span class="num">${priceStr(c/h.shares)}</span>${coarse?' <span class="pill">소수점 수량 반올림 — 단가 참고용</span>':''}`
+    const q = hasQty(h)
+      ? `<b class="num" style="color:var(--text)">${qtyStr(h.shares,h.unit)}</b> · 평단 <span class="num">${priceStr(c/h.shares)}</span>${coarse?' <span class="pill">≈</span>':''}`
       : `<span class="pill">수량 미확인</span>`;
     return `<div class="qty-row">
-      <span>${MEMBER_EMOJI[h.member]||''} ${h.member} <span style="opacity:.7">${h.institution}</span> <span class="pill">${mmdd(h.date)}</span></span>
-      <span class="r">${qty} · <span class="num">${won(h.value)}</span> ${gainSpan(g,c)}</span>
+      <span>${MEMBER_EMOJI[h.member]||''} ${h.member} <span style="opacity:.75">${h.institution}</span> <span class="pill">${mmdd(h.date)}</span></span>
+      <span class="r">${q} · <span class="num">${wonShort(h.value)}</span> ${gainSpan(g,c)}</span>
     </div>`;
   }).join('');
 
-  let trend = '';
-  if(series.length > 1){
-    const chain = series.map(p=>`${mmdd(p.date)} <b class="num" style="color:var(--text)">${priceStr(p.price)}</b>`).join(' → ');
-    const ch = (series[series.length-1].price/series[0].price - 1)*100;
-    trend = `<div class="qty-trend">단가 추이 · ${chain}
-      <span class="${ch>=0?'jade':'rustc'} num">(${ch>=0?'+':''}${ch.toFixed(1)}%)</span></div>`;
-  } else if(multi){
-    trend = `<div class="qty-trend">계좌마다 산 시점이 달라 평단가가 다르지만, 지금 단가는 다 같은 상품이라 동일해요.</div>`;
-  }
+  const multiNote = single ? '' :
+    `<div class="qty-note">계좌마다 산 시점이 달라 평단가는 다르지만, 지금 단가는 다 같은 상품이라 같아요.</div>`;
 
-  const usdRow = a.rows.find(h=>h.usd);
-  const usdNote = usdRow
-    ? `<div class="qty-trend">달러 기준 매입 <span class="num">$${usdRow.usd.cost.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}</span>
-       → 평가 <span class="num">$${usdRow.usd.value.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}</span>
-       · 주당 <span class="num">$${(usdRow.usd.value/usdRow.shares).toFixed(2)}</span>
-       · 적용환율 약 <span class="num">${Math.round(usdRow.value/usdRow.usd.value).toLocaleString('ko-KR')}원/$</span></div>`
+  const u = a.rows.find(h=>h.usd);
+  const usdNote = u
+    ? `<div class="qty-note">달러로 보면 <span class="num">$${Math.round(u.usd.cost).toLocaleString('en-US')}</span>
+       → <span class="num">$${Math.round(u.usd.value).toLocaleString('en-US')}</span>
+       <span class="pill">환율 약 ${Math.round(u.value/u.usd.value).toLocaleString('ko-KR')}원/$</span></div>`
     : '';
+
+  const unknownNote = (!a.known && a.rows.find(h=>h.note))
+    ? `<div class="qty-note">${a.rows.find(h=>h.note).note}</div>` : '';
 
   return `<div class="qty-card">
     <div class="qty-top">
-      <div class="nm">${name}</div>
+      <div class="nm">${name} ${soleTag}</div>
       <div class="rt">
-        <div class="qty-big num">${qtyStr(a.shares, a.unit)}</div>
-        <div class="qty-meta"><span class="num">${won(a.value)}</span> ${gainSpan(gain, a.cost)}</div>
+        <div class="qty-big num">${wonShort(a.value)}</div>
+        <div class="qty-meta">${gainSpan(gain, a.cost)}</div>
       </div>
     </div>
-    <div class="qty-meta">가중 평단 <b class="num" style="color:var(--text)">${priceStr(avg)}</b>
-      · 현재 단가 <b class="num" style="color:var(--text)">${priceStr(mark)}</b> <span class="pill">${mmdd(markDate)}</span>
-      · 매입 <span class="num">${won(a.cost)}</span></div>
-    <div class="qty-rows">${rows}</div>
-    ${trend}${usdNote}
+    <div class="qty-meta"><span class="num">${qtyLabel}</span>${priceBit ? ' · ' + priceBit : ''}</div>
+    ${rows ? `<div class="qty-rows">${rows}</div>` : ''}
+    ${multiNote}${usdNote}${unknownNote}
   </div>`;
 }).join('');
 
-// 수량을 아직 모르는 것들
-(function renderUnknown(){
+// 소액 종목은 하나로 접고, 수량 미확인 소액도 같이 넣는다
+(function renderMicro(){
   const noDetail = current.filter(r=> r.balance>0 && (r.category==='투자'||r.category==='연금')
     && !detailLatest.has(r.member+"|"+r.institution+"|"+r.name));
-  if(!noQty.length && !noDetail.length){ document.getElementById('qtyUnknown').innerHTML=''; return; }
-  const items = noQty.map(([n,a])=>{
-    const why = a.rows.find(h=>h.note);
-    return `<div class="qty-row"><span>${n} ${why?`<span class="pill">${why.note}</span>`:''}</span>
-      <span class="r"><span class="num">${won(a.value)}</span> ${gainSpan(a.value-a.cost, a.cost)}</span></div>`;
-  }).join('') + noDetail.map(r=>
-    `<div class="qty-row"><span>${MEMBER_EMOJI[r.member]||''} ${r.member} · ${r.institution} · ${r.name}
-      <span class="pill">계좌 합계만 확인됨</span></span>
-      <span class="r"><span class="num">${won(r.balance)}</span></span></div>`).join('');
+  const microSum = microQty.reduce((s,[,a])=>s+a.value,0) + tinyNoQty.reduce((s,[,a])=>s+a.value,0);
+  const items = microQty.map(([n,a])=>
+      `<div class="qty-row"><span>${n}</span><span class="r"><span class="num">${qtyStr(a.shares,a.unit)}</span> · <span class="num">${won(a.value)}</span></span></div>`)
+    .concat(tinyNoQty.map(([n,a])=>
+      `<div class="qty-row"><span>${n} <span class="pill">수량 미확인</span></span><span class="r"><span class="num">${won(a.value)}</span></span></div>`))
+    .concat(noDetail.map(r=>
+      `<div class="qty-row"><span>${MEMBER_EMOJI[r.member]||''} ${r.member} · ${r.institution} · ${r.name} <span class="pill">계좌 합계만 확인됨</span></span><span class="r"><span class="num">${wonShort(r.balance)}</span></span></div>`))
+    .join('');
+  if(!items){ document.getElementById('qtyUnknown').innerHTML=''; return; }
+  const count = microQty.length + tinyNoQty.length + noDetail.length;
   document.getElementById('qtyUnknown').innerHTML = `<div class="qty-card">
-    <div class="qty-top"><div class="nm">❓ 아직 수량을 모르는 것들</div></div>
-    <div class="qty-meta">아래 항목은 앱 화면에 수량이 안 보였어요. 해당 화면을 스크롤해서 다시 찍어주시면 채워집니다.</div>
-    <div class="qty-rows">${items}</div>
+    <div class="qty-top">
+      <div class="nm">🪙 조금씩 담은 것 · 아직 못 나눈 것 <span class="pill">${count}개</span></div>
+      <div class="rt"><div class="qty-big num">${wonShort(microSum + noDetail.reduce((s,r)=>s+r.balance,0))}</div></div>
+    </div>
+    <details class="more"><summary>펼쳐 보기</summary><div class="qty-rows">${items}</div></details>
   </div>`;
 })();
 
-// ── 순자산 추이 (실제 과거 + 시뮬레이터 기반 미래 예상선, 슬라이더 움직이면 부드럽게 애니메이션) ──
-let trendPrevFutureNets = null;
-let trendAnimId = null;
-let FIXED_TREND_MIN = null, FIXED_TREND_MAX = null;
-
-function renderTrendChart(){
-  const dates = Array.from(new Set(flat.map(r=>r.date))).sort();
-  const histPoints = dates.map(d=>{
-    const upTo = flat.filter(r=>r.date<=d);
-    const map = new Map();
-    upTo.slice().sort((a,b)=>a.date.localeCompare(b.date)).forEach(r=>{
-      map.set(r.member+"|"+r.institution+"|"+r.name, r.balance);
-    });
-    const parts = d.split('-');
-    return { label: parts[1]+'/'+parts[2], net: Array.from(map.values()).reduce((s,v)=>s+v,0) };
+// ── 순자산 추이 (실제 기록만) ──────────────────────────────
+// 예전엔 Y축 최댓값을 시뮬레이터 슬라이더 최대치(약 98억)로 잡아서
+// 실제 23~27억 구간이 그래프 높이의 5%에 눌려 직선처럼 보였다. 실제 데이터 범위로 잡는다.
+const trendDates = Array.from(new Set(flat.map(r=>r.date))).sort();
+const histPoints = trendDates.map(d=>{
+  const map = new Map();
+  flat.filter(r=>r.date<=d).slice().sort((a,b)=>a.date.localeCompare(b.date)).forEach(r=>{
+    map.set(r.member+"|"+r.institution+"|"+r.name, r.balance);
   });
+  return { date:d, label: mmdd(d), net: Array.from(map.values()).reduce((s,v)=>s+v,0) };
+});
 
-  const FUTURE_YEARS = [1,3,5,7,10];
-  const liveMove = (typeof simMove !== 'undefined') ? +simMove.value : 0;
-  const liveContrib = (typeof simContrib !== 'undefined') ? +simContrib.value : 0;
-  const targetNets = (typeof simulate === 'function')
-    ? FUTURE_YEARS.map(yy => simulate(yy,liveMove,liveContrib).total)
-    : [];
+// 늘어난 돈 중 '새로 반영한 계좌'가 얼마인지 떼어낸다.
+// 이걸 안 떼면 계좌를 추가한 것이 수익처럼 보인다 (+3.9억 초록 배지가 실제로는 마이너스였음).
+let inflow = 0;
+const seenKeys = new Set();
+trendDates.forEach((d, di)=>{
+  flat.filter(r=>r.date===d).forEach(r=>{
+    const k = r.member+"|"+r.institution+"|"+r.name;
+    if(!seenKeys.has(k)){ seenKeys.add(k); if(di>0) inflow += r.balance; }
+  });
+});
+const totalChange = histPoints[histPoints.length-1].net - histPoints[0].net;
+const organicChange = totalChange - inflow;
 
-  const startNets = (trendPrevFutureNets && trendPrevFutureNets.length===targetNets.length)
-    ? trendPrevFutureNets.slice() : targetNets.slice();
+function svgChart(points, opts){
+  const N = points.length;
+  const w=700, h=300, padL=76, padR=18, padT=30, padB=44;
+  const plotW=w-padL-padR, plotH=h-padT-padB;
+  const vals = points.map(p=>p.net);
+  let min = Math.min(...vals), max = Math.max(...vals);
+  const span = (max-min) || Math.abs(max)*0.1 || 1;
+  min -= span*0.22; max += span*0.22;
+  const y = v => padT + plotH - ((v-min)/(max-min))*plotH;
+  const x = i => N<=1 ? padL+plotW/2 : padL + i*(plotW/(N-1));
 
-  // Y축을 슬라이더가 낼 수 있는 전체 범위(최대 이동+최대 저축, 10년)로 딱 한 번만 계산해서 고정 — 이후 절대 안 움직임
-  if(FIXED_TREND_MIN===null && typeof simulate === 'function'){
-    const histVals = histPoints.map(p=>p.net);
-    const worstCase = Math.min(...histVals, targetNets[0]!==undefined?targetNets[0]:histVals[0]);
-    const bestCase = simulate(10, +simMove.max, +simContrib.max).total;
-    const span0 = (bestCase-worstCase) || Math.abs(bestCase)*0.1 || 1;
-    FIXED_TREND_MIN = worstCase - span0*0.08;
-    FIXED_TREND_MAX = bestCase + span0*0.08;
+  let grid='';
+  for(let g=0; g<=3; g++){
+    const v = min + ((max-min)*g/3), yy = y(v);
+    grid += `<line x1="${padL}" y1="${yy}" x2="${padL+plotW}" y2="${yy}" stroke="var(--line)" stroke-width="1"/>
+      <text x="${padL-10}" y="${yy+6}" font-size="16" text-anchor="end" fill="var(--sub)" class="num">${(v/1e8).toFixed(1)}억</text>`;
   }
-  const scaleMin = FIXED_TREND_MIN, scaleMax = FIXED_TREND_MAX;
+  const path = points.map((p,i)=>(i===0?'M':'L')+x(i)+','+y(p.net)).join(' ');
+  const area = path + ` L${x(N-1)},${padT+plotH} L${x(0)},${padT+plotH} Z`;
 
-  if(trendAnimId) cancelAnimationFrame(trendAnimId);
-  const duration = 550;
-  const t0 = performance.now();
-  const ease = t => 1 - Math.pow(1-t, 3);
-
-  function frame(now){
-    const p = Math.min(1, (now-t0)/duration);
-    const e = ease(p);
-    const currentNets = targetNets.map((v,i)=> startNets[i] + (v-startNets[i])*e);
-    drawTrendSVG(dates, histPoints, FUTURE_YEARS, currentNets, scaleMin, scaleMax, liveMove, liveContrib);
-    if(p<1){ trendAnimId = requestAnimationFrame(frame); }
-    else { trendPrevFutureNets = targetNets.slice(); trendAnimId = null; }
-  }
-  trendAnimId = requestAnimationFrame(frame);
-}
-
-function drawTrendSVG(dates, histPoints, FUTURE_YEARS, futureNets, min, max, liveMove, liveContrib){
-  const H = histPoints.length;
-  const futPoints = FUTURE_YEARS.map((yy,i)=>({ label:'+'+yy+'년', net: futureNets[i] }));
-  const F = futPoints.length;
-
-  const w=820, h=340, padL=78, padR=20, padT=36, padB=48;
-  const plotW = w-padL-padR, plotH = h-padT-padB;
-  const splitX = F>0 ? (padL + plotW*0.4) : (padL+plotW);
-  const range = (max-min) || 1;
-  const y = v => padT + plotH - ((v-min)/range)*plotH;
-
-  const histX = i => H<=1 ? splitX : padL + i*((splitX-padL)/(H-1));
-  const futX = i => splitX + (i+1)*(((padL+plotW)-splitX)/F);
-
-  const GRID_N = 4;
-  let gridLines = '';
-  for(let g=0; g<=GRID_N; g++){
-    const v = min + (range*g/GRID_N);
-    const yy = y(v);
-    gridLines += `<line x1="${padL}" y1="${yy}" x2="${padL+plotW}" y2="${yy}" stroke="var(--line)" stroke-width="1"/>
-      <text x="${padL-12}" y="${yy+5}" font-size="13" text-anchor="end" fill="var(--sub)" class="num">${(v/100000000).toFixed(1)}억</text>`;
-  }
-
-  const histPath = histPoints.map((p,i)=>(i===0?'M':'L')+histX(i)+','+y(p.net)).join(' ');
-  const histArea = histPath + ` L${histX(H-1)},${padT+plotH} L${histX(0)},${padT+plotH} Z`;
-  const futPath = F>0
-    ? `M${histX(H-1)},${y(histPoints[H-1].net)} ` + futPoints.map((p,i)=>`L${futX(i)},${y(p.net)}`).join(' ')
-    : '';
-
-  const maxLabels = 7;
-  const step = Math.max(1, Math.ceil(H/maxLabels));
-  let dots='', xlabels='';
-  histPoints.forEach((p,i)=>{
-    const px=histX(i), py=y(p.net);
-    const above = (py-26) > (padT+8);
-    const labelY = above ? py-18 : py+28;
-    dots += `<circle cx="${px}" cy="${py}" r="5" fill="var(--accent)" stroke="var(--ink2)" stroke-width="2.5"/>
-      <text x="${px}" y="${labelY}" font-size="15" text-anchor="middle" fill="var(--text)" class="num" style="font-weight:800">${(p.net/100000000).toFixed(2)}억</text>`;
-    if(i % step === 0 || i===H-1){
-      xlabels += `<text x="${px}" y="${h-18}" font-size="12" text-anchor="middle" fill="var(--sub)">${p.label}</text>`;
+  let dots='', labels='';
+  points.forEach((p,i)=>{
+    const px=x(i), py=y(p.net);
+    // 양 끝 라벨은 가운데 정렬하면 그림 밖으로 삐져나가 잘린다
+    const anchor = i===0 ? 'start' : (i===N-1 ? 'end' : 'middle');
+    dots += `<circle cx="${px}" cy="${py}" r="5" fill="var(--accent)" stroke="var(--ink2)" stroke-width="2.5"/>`;
+    if(opts.labelAll || i===0 || i===N-1){
+      const up = (py-30) > padT;
+      dots += `<text x="${px}" y="${up?py-16:py+30}" font-size="18" text-anchor="${anchor}" fill="var(--text)" class="num" style="font-weight:800">${(p.net/1e8).toFixed(1)}억</text>`;
     }
-  });
-  futPoints.forEach((p,i)=>{
-    const px=futX(i), py=y(p.net);
-    const above = (py-26) > (padT+8);
-    const labelY = above ? py-18 : py+28;
-    dots += `<circle cx="${px}" cy="${py}" r="5.5" fill="var(--accent)" stroke="var(--ink2)" stroke-width="2.5"/>
-      <text x="${px}" y="${labelY}" font-size="13" text-anchor="middle" fill="var(--sub)" class="num" style="font-weight:700">${(p.net/100000000).toFixed(1)}억</text>`;
-    xlabels += `<text x="${px}" y="${h-18}" font-size="11" text-anchor="middle" fill="var(--sub)">${p.label}</text>`;
+    labels += `<text x="${px}" y="${h-14}" font-size="16" text-anchor="${anchor}" fill="var(--sub)">${p.label}</text>`;
   });
 
-  const nowMarker = F>0 ? `<line x1="${splitX}" y1="${padT}" x2="${splitX}" y2="${padT+plotH}" stroke="var(--sub)" stroke-dasharray="2 4" opacity="0.55"/>
-    <text x="${splitX}" y="${padT-12}" font-size="11" text-anchor="middle" fill="var(--sub)">오늘</text>` : '';
-
-  const first = histPoints[0].net, last = histPoints[H-1].net;
-  const change = last-first;
-  const changePct = first!==0 ? (change/Math.abs(first)*100) : 0;
-  const changeColor = change>=0 ? 'var(--jade)' : 'var(--rust)';
-  const sign = change>=0 ? '+' : '';
-  const futLast = futPoints[futPoints.length-1];
-
-  document.getElementById('trendChart').innerHTML = `
-    <div style="display:flex; justify-content:space-between; align-items:baseline; margin-bottom:10px; flex-wrap:wrap; gap:8px; font-size:13px; color:var(--sub);">
-      <span>${dates[0]} ~ ${dates[dates.length-1]} 실제 (${H}개 시점)${futLast?` · +${FUTURE_YEARS[FUTURE_YEARS.length-1]}년 후 예상 <b class="num" style="color:var(--text)">${(futLast.net/100000000).toFixed(1)}억</b>`:''}</span>
-      <span class="num" style="font-weight:700; color:${changeColor}; font-size:15px;">${sign}${won(change)} (${sign}${changePct.toFixed(1)}%)</span>
-    </div>
-    <svg viewBox="0 0 ${w} ${h}" width="100%" style="display:block;" preserveAspectRatio="xMidYMid meet">
-      <defs><linearGradient id="areaFill" x1="0" y1="0" x2="0" y2="1">
-        <stop offset="0%" stop-color="var(--accent)" stop-opacity="0.25"/>
-        <stop offset="100%" stop-color="var(--accent)" stop-opacity="0"/>
-      </linearGradient></defs>
-      ${gridLines}
-      <path d="${histArea}" fill="url(#areaFill)" stroke="none"/>
-      <path d="${histPath}" fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
-      ${futPath ? `<path d="${futPath}" fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-dasharray="6 5" opacity="0.85" stroke-linejoin="round" stroke-linecap="round"/>` : ''}
-      ${nowMarker}
-      ${dots}
-      ${xlabels}
-    </svg>
-    ${F>0 ? `<div class="howto" style="margin-top:12px;">점선 구간(오늘 이후)은 자산유형별 실제 통계 성장률에 <b>지금 아래 슬라이더 설정</b>(부동산→주식 이동 ${won(liveMove)}, 연간 추가저축 ${won(liveContrib)})을 반영한 예상선이에요 — 슬라이더를 움직이면 이 그래프가 부드럽게 움직여요.</div>` : ''}
-  `;
+  return `<svg viewBox="0 0 ${w} ${h}" width="100%" style="display:block" preserveAspectRatio="xMidYMid meet">
+    <defs><linearGradient id="${opts.gid}" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="var(--accent)" stop-opacity="0.24"/>
+      <stop offset="100%" stop-color="var(--accent)" stop-opacity="0"/>
+    </linearGradient></defs>
+    ${grid}
+    <path d="${area}" fill="url(#${opts.gid})"/>
+    <path d="${path}" fill="none" stroke="var(--accent)" stroke-width="2.5"
+      stroke-dasharray="${opts.dashed?'6 5':'0'}" stroke-linejoin="round" stroke-linecap="round"/>
+    ${dots}${labels}
+  </svg>`;
 }
 
-// ── 미래 자산 시뮬레이터 (인터랙티브, 자산유형별 실제 통계 기반 성장률) ──
+document.getElementById('trendChart').innerHTML = `
+  <div style="font-size:var(--fs-body); color:var(--sub); line-height:1.75; margin-bottom:10px;">
+    ${trendDates[0]} ~ ${trendDates[trendDates.length-1]} · ${histPoints.length}개 시점 ·
+    기록 시작 이후 <b class="num" style="color:var(--text)">${wonShort(totalChange)}</b> 늘었는데,
+    이 중 <b class="num" style="color:var(--text)">${wonShort(inflow)}</b>은 새로 반영한 계좌예요.<br>
+    같은 계좌끼리만 비교하면 <b class="num ${organicChange>=0?'up':'down'}">${organicChange>=0?'+':''}${wonShort(organicChange)}</b>
+  </div>
+  ${svgChart(histPoints, {gid:'gHist', labelAll:false})}`;
+
+// ── 미래 자산 시뮬레이터 ──
 const GROWTH_RATES = {
-  realestate: 0.085, // 서울 아파트 2002~2021 약 5.2배(누적 420%) 상승의 복리 환산 (한국부동산원·언론 보도)
+  realestate: 0.085, // 서울 아파트 2002~2021 약 5.2배(누적 420%) 상승의 복리 환산
   equity:     0.10,  // S&P500 최근 30년 명목 연평균 (Fidelity)
-  bond:       0.04,  // 채권형 자산 장기 평균 추정
-  cash:       0.02,  // 현금성/예수금
+  bond:       0.04,
+  cash:       0.02,
   crypto:     0.0,   // 변동성이 너무 커서 과거 수익률로 미래 예측 불가 → 보수적 가정
-  car:        0.0    // 감가상각 단순화
+  car:        0.0
 };
 const TYPE_LABEL = { realestate:'🏠 부동산', equity:'📈 주식/펀드', bond:'💵 채권', cash:'🏦 현금성', crypto:'₿ 가상자산', car:'🚗 자동차' };
 const TYPE_COLOR = { realestate:'var(--realty)', equity:'var(--invest)', bond:'var(--cash)', cash:'var(--save)', crypto:'var(--crypto)', car:'var(--sub)' };
@@ -979,7 +980,8 @@ function buildPrincipals(){
   current.forEach(r=>{
     if(r.balance<0) return;
     if(r.category==='부동산'){
-      list.push({ type: r.institution==='기타자산' ? 'car' : 'realestate', value:r.balance });
+      list.push({ type: r.institution==='기타자산' ? 'car' : 'realestate', value:r.balance,
+        movable: r.institution==='소유부동산' });   // 살고 있는 집 보증금은 주식으로 옮길 수 없다
     } else if(r.category==='입출금' || r.category==='저축'){
       list.push({ type:'cash', value:r.balance });
     } else if(r.category==='투자' || r.category==='연금'){
@@ -993,19 +995,19 @@ function buildPrincipals(){
   return list;
 }
 const basePrincipals = buildPrincipals();
-const realEstateOnly = basePrincipals.filter(p=>p.type==='realestate').reduce((s,p)=>s+p.value,0);
+const movableRealEstate = basePrincipals.filter(p=>p.movable).reduce((s,p)=>s+p.value,0);
 const baseYear = new Date(lastDate).getFullYear();
 
 const simYear = document.getElementById('simYear');
 const simMove = document.getElementById('simMove');
 const simContrib = document.getElementById('simContrib');
-simMove.max = Math.round(realEstateOnly);
+simMove.max = Math.round(movableRealEstate);
 
 function simulate(years, move, contrib){
-  let remaining = Math.min(move, realEstateOnly);
+  let remaining = Math.min(move, movableRealEstate);
   const moved = remaining;
   const principals = basePrincipals.map(p=>{
-    if(remaining>0 && p.type==='realestate'){
+    if(remaining>0 && p.movable){
       const take = Math.min(p.value, remaining);
       remaining -= take;
       return { type:p.type, value:p.value-take };
@@ -1016,8 +1018,7 @@ function simulate(years, move, contrib){
 
   const byType = {}; let total = 0;
   principals.forEach(p=>{
-    const g = GROWTH_RATES[p.type];
-    const fv = p.value*Math.pow(1+g, years);
+    const fv = p.value*Math.pow(1+GROWTH_RATES[p.type], years);
     byType[p.type] = (byType[p.type]||0) + fv;
     total += fv;
   });
@@ -1030,18 +1031,24 @@ function simulate(years, move, contrib){
   return { total: total - totalDebt, byType };
 }
 
+const FUTURE_YEARS = [1,3,5,7,10];
 function updateSim(){
   const year = +simYear.value, move = +simMove.value, contrib = +simContrib.value;
   const r = simulate(year, move, contrib);
   document.getElementById('simYearLabel').innerHTML = `<b class="num">${year}년 후</b> (${baseYear+year}년)`;
-  document.getElementById('simMoveLabel').textContent = won(move);
-  document.getElementById('simContribLabel').textContent = won(contrib) + "/년";
-  document.getElementById('simNet').textContent = won(r.total);
+  document.getElementById('simMoveLabel').textContent = wonShort(move);
+  document.getElementById('simContribLabel').textContent = wonShort(contrib) + "/년";
+  document.getElementById('simNet').textContent = wonShort(r.total);
   document.getElementById('simBreakdown').innerHTML = Object.entries(r.byType)
-    .filter(([,v])=>v>0.5)
-    .sort((a,b)=>b[1]-a[1])
-    .map(([t,v])=>`<span><span class="dot" style="background:${TYPE_COLOR[t]}"></span>${TYPE_LABEL[t]||t} <b class="num">${won(v)}</b></span>`).join('');
-  renderTrendChart();
+    .filter(([,v])=>v>0.5).sort((a,b)=>b[1]-a[1])
+    .map(([t,v])=>`<span><span class="dot" style="background:${TYPE_COLOR[t]}"></span>${TYPE_LABEL[t]||t} <b class="num">${wonShort(v)}</b></span>`).join('');
+
+  const now = histPoints[histPoints.length-1];
+  const pts = [{date:lastDate, label:'지금', net:now.net}]
+    .concat(FUTURE_YEARS.map(yy=>({date:'', label:'+'+yy+'년', net:simulate(yy,move,contrib).total})));
+  document.getElementById('simChart').innerHTML =
+    svgChart(pts, {gid:'gFut', labelAll:true, dashed:true})
+    + `<div class="basis">점선은 위 슬라이더를 반영한 예상선이에요 🔮</div>`;
 }
 simYear.oninput = updateSim;
 simMove.oninput = updateSim;
@@ -1064,8 +1071,9 @@ function renderTable(){
     .sort((a,b)=> b.date.localeCompare(a.date) || Math.abs(b.balance)-Math.abs(a.balance));
   document.getElementById('detailBody').innerHTML = rows.map(r=>`
     <tr class="${r.balance<0?'debt':''}">
-      <td>${r.date}</td><td>${r.member}</td><td>${r.category}</td>
-      <td>${r.institution}</td><td>${r.name}${r.note?` <span class="note">· ${r.note}</span>`:''}</td>
+      <td class="num">${r.date}</td><td>${r.member}</td><td>${r.category}</td>
+      <td>${r.institution}</td>
+      <td>${r.name}${r.note ? `<details class="cellnote"><summary>${r.short||'메모'}</summary><span class="full">${r.note}</span></details>` : ''}</td>
       <td class="amt num">${won(r.balance)}</td>
     </tr>`).join('');
 }
