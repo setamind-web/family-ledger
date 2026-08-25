@@ -460,8 +460,51 @@ const DATA = {
           "short": "계좌 합계만 확인 · 장모님 위탁분 제외",
           "note": "토스증권 기본계좌 398,059,602원(+12.6%, 장모님 명의를 대신 운용 중인 SPY+미국채+예수금)은 본인 자산 아니라서 제외" },
         { "category": "연금", "institution": "토스 내투자 (연결계좌 종합)", "name": "연금저축계좌(신)", "balance": 34456797,
-          "short": "앱에선 빠져 있지만 우리 자산이라 포함",
-          "note": "본인 소유 자산 맞음. Toss 앱 화면엔 '자산 제외'로 뜨지만 이는 유동성 낮은 장기 자산이라 사용자가 앱 내 총액 집계에서 임의로 뺀 것 (2026-08-23 확인) — 가족 자산엔 포함" }
+          "short": "앱에선 빠져 있지만 우리 자산이라 포함 · 종목 미확인",
+          "note": "본인 소유 자산 맞음. Toss 앱 화면엔 '자산 제외'로 뜨지만 이는 유동성 낮은 장기 자산이라 사용자가 앱 내 총액 집계에서 임의로 뺀 것 (2026-08-23 확인) — 가족 자산엔 포함. 종목 내역 미확인이지만, 8/15 토스 목록에는 있고 8/25 NH 종합매매에는 없는 KODEX 미국S&P500(H) 1,289주(약 22,029,010) + TIGER 미국S&P500배당귀족 824주(11,560,720) + 카카오 1주(40,000) = 33,629,730이 이 잔액과 거의 맞아떨어져, 이 계좌에 들어있는 것으로 추정됨 (2026-08-25 사용자 확인). 추정이라 holdings에는 넣지 않음 — 다음에 이 계좌 잔고 화면을 찍으면 확정" }
+      ]
+    },
+    {
+      "date": "2026-08-25", "member": "아빠", "source": "채팅 첨부 3장 (NH증권 주식잔고·예수금 상세, 07:39~07:40)",
+      "accounts": [
+        { "category": "투자", "institution": "NH증권 (종합매매 202-01-446169)", "name": "국내주식 + 예수금", "balance": 196482231,
+          "reclass": true, "short": "토스 합산에서 계좌별로 분리",
+          "note": "2026-08-25 07:39 화면. 국내평가금액 173,386,530 + 예수금 23,095,701 = 국내순자산 196,482,231 (화면 값과 정확히 일치). 그동안 '토스 내투자' 한 덩어리로 잡던 돈을 계좌별 실제 종목으로 나눈 것이라 새로 생긴 자산이 아님",
+          "holdings": [
+            { "name": "KODEX 미국S&P500(H)", "value": 140428530, "shares": 8217, "unit": "주", "gain": 11297139 },
+            { "name": "삼성SDI", "value": 31930000, "shares": 62, "unit": "주", "gain": 23184390 },
+            { "name": "삼성전자", "value": 1028000, "shares": 4, "unit": "주", "gain": -47136 },
+            { "name": "예수금(현금)", "value": 23095701 }
+          ] },
+        { "category": "투자", "institution": "NH증권 (종합매매 202-01-446169)", "name": "해외주식", "balance": 82790842,
+          "reclass": true, "short": "해외잔고 탭 미확보 · 8/15 값 그대로",
+          "note": "해외잔고 탭 스크린샷이 없어 2026-08-15 토스 화면의 해외 보유분을 그대로 옮김. 같은 종합매매 계좌 안에 있고, 토스 기준 NH 종합매매 총액 276,664,389에서 8/25 국내순자산 196,482,231을 뺀 약 80,182,158과 대체로 맞음. 다음에 해외잔고 탭을 찍으면 최신값으로 갱신 필요",
+          "holdings": [
+            { "name": "뱅가드 미국 초장기 국채 ETF", "value": 43361040, "shares": 514, "unit": "주", "gain": -2932042, "asof": "2026-08-15" },
+            { "name": "아이셰어즈 러셀2000 ETF", "value": 39409825, "shares": 91, "unit": "주", "gain": 8726191, "asof": "2026-08-15" },
+            { "name": "애플", "value": 8804, "shares": 0.020341, "unit": "주", "gain": 3947, "asof": "2026-08-15" },
+            { "name": "엔비디아", "value": 2556, "shares": 0.008, "unit": "주", "gain": 960, "asof": "2026-08-15" },
+            { "name": "테슬라", "value": 2429, "shares": 0.005, "unit": "주", "gain": -319, "asof": "2026-08-15" },
+            { "name": "알파벳 A", "value": 1964, "shares": 0.004, "unit": "주", "gain": 880, "asof": "2026-08-15" },
+            { "name": "메타 플랫폼스", "value": 1674, "shares": 0.002, "unit": "주", "gain": -321, "asof": "2026-08-15" },
+            { "name": "마이크로소프트", "value": 1406, "shares": 0.002, "unit": "주", "gain": 237, "asof": "2026-08-15" },
+            { "name": "아마존닷컴", "value": 1118, "shares": 0.003, "unit": "주", "gain": 111, "asof": "2026-08-15" },
+            { "name": "나이키", "value": 26, "shares": 0.000461, "unit": "주", "gain": -46, "asof": "2026-08-15" }
+          ] },
+        { "category": "투자", "institution": "NH증권 (ISA중개형 212-02-644700)", "name": "주식잔고 + 예수금", "balance": 18643514,
+          "reclass": true, "short": "토스 합산에서 계좌별로 분리",
+          "note": "2026-08-25 07:39 화면. 평가금액 18,563,310 + 예수금 80,204. 앱 표시 순자산 18,642,614와 900원 차이는 수수료 반영 차이. 8/15 토스에서 같은 698주였고 단가만 28,185 → 26,595으로 내려간 것이라 매매는 없었음",
+          "holdings": [
+            { "name": "KODEX 미국나스닥100", "value": 18563310, "shares": 698, "unit": "주", "gain": -1415320 },
+            { "name": "예수금(현금)", "value": 80204 }
+          ] },
+        { "category": "투자", "institution": "토스 내투자 (연결계좌 종합)", "name": "국내·해외 주식 + 기타투자 + 예수금", "balance": 386661,
+          "short": "NH를 따로 잡으면서 남은 소액계좌만",
+          "note": "NH 종합매매·ISA를 계좌별로 따로 기록하게 되어 이 항목에는 토스에 연결된 나머지 소액 계좌만 남김. 검산: 2026-08-21 토스 내투자 295,827,184 = NH 종합매매 276,664,389 + NH ISA 18,776,134 + 소액계좌 9개 합계 386,661 (정확히 일치). 장모님 명의 위탁분 398,059,602는 여전히 제외",
+          "holdings": [
+            { "name": "한국투자미국배당귀족증권자투자신탁H(주식)-Ce", "value": 81844, "note": "삼성증권 종합매매 · 앱에 좌수 미표시" },
+            { "name": "토스증권 등 소액계좌 잔액", "value": 304817, "note": "잔액 1원~25만원짜리 계좌 8개 합계" }
+          ] }
       ]
     },
     { "date": "2026-08-21", "member": "아빠", "source": "screenshots/Screenshot_20260821_110354_Upbit.jpg",
@@ -529,7 +572,7 @@ DATA.snapshots.forEach(snap=>{
   snap.accounts.forEach(acc=>{
     flat.push({date:snap.date, member:snap.member, category:acc.category,
       institution:acc.institution, name:acc.name, balance:acc.balance,
-      note:acc.note||"", short:acc.short||"", holdings:acc.holdings||null});
+      note:acc.note||"", short:acc.short||"", reclass:!!acc.reclass, holdings:acc.holdings||null});
   });
 });
 
@@ -653,7 +696,9 @@ function holdingRowsOf(rows){
     if(r.balance<0 || (r.category!=='투자' && r.category!=='연금')) return;
     (r.holdings||[]).forEach(h=>{
       if(CASH_RE.test(h.name)) return;
-      out.push(Object.assign({}, h, {date:r.date, member:r.member, institution:r.institution}));
+      // asof: 한 계좌 안에서도 종목마다 확인 시점이 다를 수 있다
+      // (예: NH 종합매매는 국내잔고만 8/25에 찍었고 해외잔고는 8/15 값 그대로)
+      out.push(Object.assign({}, h, {date:h.asof || r.date, member:r.member, institution:r.institution}));
     });
   });
   return out;
@@ -891,12 +936,14 @@ const histPoints = trendDates.map(d=>{
 
 // 늘어난 돈 중 '새로 반영한 계좌'가 얼마인지 떼어낸다.
 // 이걸 안 떼면 계좌를 추가한 것이 수익처럼 보인다 (+3.9억 초록 배지가 실제로는 마이너스였음).
+// reclass 계좌는 예외 — 한 덩어리로 잡던 걸 계좌별로 쪼갠 것뿐이라 새 돈이 아니다.
+// (쪼개진 만큼 원래 계좌 잔액이 줄어드니, 둘을 상계하면 실제 변화만 남는다)
 let inflow = 0;
 const seenKeys = new Set();
 trendDates.forEach((d, di)=>{
   flat.filter(r=>r.date===d).forEach(r=>{
     const k = r.member+"|"+r.institution+"|"+r.name;
-    if(!seenKeys.has(k)){ seenKeys.add(k); if(di>0) inflow += r.balance; }
+    if(!seenKeys.has(k)){ seenKeys.add(k); if(di>0 && !r.reclass) inflow += r.balance; }
   });
 });
 const totalChange = histPoints[histPoints.length-1].net - histPoints[0].net;
