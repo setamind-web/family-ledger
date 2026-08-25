@@ -129,22 +129,6 @@
 
   footer.priv{color:var(--sub); font-size:var(--fs-micro); margin-top:18px; text-align:center;}
 
-  .family{margin-bottom:20px;}
-  .family .cap{font-size:var(--fs-body); color:var(--sub); margin-bottom:12px;}
-  .family-strip{display:flex; gap:16px; overflow-x:auto; padding:8px 4px 16px;}
-  .family-strip img{
-    height:190px; width:auto; display:block; border-radius:6px;
-    border:7px solid var(--ink2); box-shadow:0 6px 18px rgba(233,96,143,.28);
-    flex-shrink:0; transition:transform .15s ease;
-  }
-  .family-strip img:hover{transform:translateY(-4px) rotate(0deg) !important;}
-  .family-strip img:nth-child(1){transform:rotate(-3deg);}
-  .family-strip img:nth-child(2){transform:rotate(2deg);}
-  .family-strip img:nth-child(3){transform:rotate(-1.5deg);}
-  .family-strip img:nth-child(4){transform:rotate(3deg);}
-  .family-strip img:nth-child(5){transform:rotate(-2deg);}
-  @media (max-width:620px){ .family-strip img{height:132px; border-width:5px;} }
-
   /* ── 6. 보유 종목 ───────────────────────────────────────── */
   .qty-summary{background:linear-gradient(160deg,var(--ink3),var(--ink2)); border:1px solid var(--line);
     border-radius:16px; padding:16px 18px; margin-bottom:14px;}
@@ -217,11 +201,6 @@
   <div class="masthead">
     <div class="eyebrow">🩷 가족 자산통장</div>
     <div class="updated" id="updated"></div>
-  </div>
-
-  <div class="family">
-    <div class="cap">우리 넷, 오늘도 자라는 중 🌱</div>
-    <div class="family-strip" id="familyStrip"></div>
   </div>
 
   <div class="cover">
@@ -396,7 +375,7 @@ const DATA = {
     {
       "date": "2026-08-11", "member": "엄마", "source": "screenshots/엄마_20260811_CMA주식계좌.jpg",
       "accounts": [
-        { "category": "투자", "institution": "증권사 CMA (201-01-069752)", "name": "주식잔고", "balance": 95830235,
+        { "category": "투자", "institution": "증권사 CMA (···9752)", "name": "주식잔고", "balance": 95830235,
           "short": "순자산 기준", "note": "순자산 기준. 앱 표시 매입가 15,940 / 현재가 16,940",
           "holdings": [
             { "name": "KODEX 미국S&P500(H)", "value": 95812640, "shares": 5656, "unit": "주", "gain": 5653480 },
@@ -407,18 +386,18 @@ const DATA = {
     {
       "date": "2026-08-11", "member": "공동(아빠+엄마 지분반반)", "source": "manual",
       "accounts": [
-        { "category": "부동산", "institution": "소유부동산", "name": "올림픽파크 포레온 49㎡ (강동구 둔촌동)",
+        { "category": "부동산", "institution": "소유부동산", "name": "보유 아파트 49㎡",
           "balance": 2300000000, "short": "직접 입력한 추정 시세",
           "note": "사용자 제공 추정 시세(2026-08-11 입력). 실거래가 자동조회 실패로 수동 입력값 사용" },
-        { "category": "부채", "institution": "전세보증금(임대)", "name": "포레온 전세보증금 · 세입자에게 줄 돈",
+        { "category": "부채", "institution": "전세보증금(임대)", "name": "보유 아파트 전세보증금 · 세입자에게 줄 돈",
           "balance": -450000000, "short": "계약 끝나면 돌려줄 돈",
-          "note": "포레온을 세입자에게 전세로 임대, 계약 종료시 반환 의무" }
+          "note": "보유 아파트를 세입자에게 전세로 임대, 계약 종료시 반환 의무" }
       ]
     },
     {
       "date": "2026-08-11", "member": "엄마", "source": "manual",
       "accounts": [
-        { "category": "부동산", "institution": "거주부동산 전세보증금", "name": "수원 삼성태영아파트 전세보증금 · 우리가 받을 돈",
+        { "category": "부동산", "institution": "거주부동산 전세보증금", "name": "거주지 전세보증금 · 우리가 받을 돈",
           "balance": 280000000, "short": "우리가 사는 집 · 나중에 돌려받아요",
           "note": "엄마 명의. 우리 가족이 거주 중, 계약 종료시 돌려받을 자산" }
       ]
@@ -426,7 +405,7 @@ const DATA = {
     {
       "date": "2026-08-11", "member": "시우", "source": "screenshots/시우_20260811_키움해외잔고.jpg",
       "accounts": [
-        { "category": "투자", "institution": "키움증권 (해외증권 6322-8982)", "name": "해외주식 잔고", "balance": 20812277,
+        { "category": "투자", "institution": "키움증권 (해외증권 ···8982)", "name": "해외주식 잔고", "balance": 20812277,
           "short": "달러로 산 주식이라 환율도 같이 움직여요",
           "note": "평가금액 기준. 달러 기준 매입 $13,119.40 → 평가 $14,678.76, 환산환율 약 1,418원/$",
           "holdings": [ { "name": "SPY (S&P500 SPDR ETF)", "value": 20812277, "shares": 19, "unit": "주", "gain": 2112409, "usd": { "value": 14678.7578, "cost": 13119.40 } } ] }
@@ -435,7 +414,7 @@ const DATA = {
     {
       "date": "2026-08-11", "member": "시아", "source": "screenshots/시아_20260811_증권사잔고.jpg",
       "accounts": [
-        { "category": "투자", "institution": "증권사 종합매매 (207-01-572717)", "name": "주식잔고", "balance": 25697709,
+        { "category": "투자", "institution": "증권사 종합매매 (···2717)", "name": "주식잔고", "balance": 25697709,
           "short": "순자산 기준", "note": "순자산 기준. 앱 표시 매입가 17,142 / 현재가 24,800",
           "holdings": [
             { "name": "KODEX 미국S&P500", "value": 14880000, "shares": 600, "unit": "주", "gain": 4594500 },
@@ -467,7 +446,7 @@ const DATA = {
     {
       "date": "2026-08-25", "member": "아빠", "source": "채팅 첨부 3장 (NH증권 주식잔고·예수금 상세, 07:39~07:40)",
       "accounts": [
-        { "category": "투자", "institution": "NH증권 (종합매매 202-01-446169)", "name": "국내주식 + 예수금", "balance": 196482231,
+        { "category": "투자", "institution": "NH증권 (종합매매 ···6169)", "name": "국내주식 + 예수금", "balance": 196482231,
           "reclass": true, "short": "토스 합산에서 계좌별로 분리",
           "note": "2026-08-25 07:39 화면. 국내평가금액 173,386,530 + 예수금 23,095,701 = 국내순자산 196,482,231 (화면 값과 정확히 일치). 그동안 '토스 내투자' 한 덩어리로 잡던 돈을 계좌별 실제 종목으로 나눈 것이라 새로 생긴 자산이 아님",
           "holdings": [
@@ -476,14 +455,14 @@ const DATA = {
             { "name": "삼성전자", "value": 1028000, "shares": 4, "unit": "주", "gain": -47136 },
             { "name": "예수금(현금)", "value": 23095701 }
           ] },
-        { "category": "투자", "institution": "NH증권 (종합매매 202-01-446169)", "name": "해외주식", "balance": 80736415,
+        { "category": "투자", "institution": "NH증권 (종합매매 ···6169)", "name": "해외주식", "balance": 80736415,
           "reclass": true, "short": "8/25 21:49 확인 · 2종목뿐",
           "note": "2026-08-25 21:49 화면. 이 계좌의 해외는 이 2종목뿐 (화면 상단 '총 2개'). 앱 표시 매입 76,976,716 / 평가 80,736,672 / 평가손익 +3,759,956 (+4.88%). 종목별 매입가×수량으로 다시 계산하면 평가 합계가 80,736,415로 257원 적은데, 매입가가 원 단위로 반올림 표시돼 생기는 차이라 종목 합계 쪽을 씀. 촬영 시각이 미국 정규장 개장(22:30 KST) 전이라 표시 시세는 직전 종가~프리마켓 기준. 소수점 주식(애플·엔비디아 등 8종)은 여기 없고 토스증권 소액계좌에 있음 — 이전에 이 계좌로 잘못 넣어뒀던 것을 바로잡음",
           "holdings": [
             { "name": "아이셰어즈 러셀2000 ETF", "value": 37633772, "shares": 91, "unit": "주", "gain": 6950210, "note": "IWM · 화면 현재가 $299.55 (+0.53%) · 매입가 337,182원/주" },
             { "name": "뱅가드 미국 초장기 국채 ETF", "value": 43102643, "shares": 514, "unit": "주", "gain": -3190253, "note": "EDV · 화면 현재가 $60.18 · 매입가 90,064원/주" }
           ] },
-        { "category": "투자", "institution": "NH증권 (ISA중개형 212-02-644700)", "name": "주식잔고 + 예수금", "balance": 18643514,
+        { "category": "투자", "institution": "NH증권 (ISA중개형 ···4700)", "name": "주식잔고 + 예수금", "balance": 18643514,
           "reclass": true, "short": "토스 합산에서 계좌별로 분리",
           "note": "2026-08-25 07:39 화면. 평가금액 18,563,310 + 예수금 80,204. 앱 표시 순자산 18,642,614와 900원 차이는 수수료 반영 차이. 8/15 토스에서 같은 698주였고 단가만 28,185 → 26,595으로 내려간 것이라 매매는 없었음",
           "holdings": [
@@ -553,20 +532,6 @@ function gainSpan(gain, cost){
   return `<span class="${gain>=0?'up':'down'}">${gain>=0?'+':''}${gainAmt(gain)} ${pctStr(gain,cost)}</span>`;
 }
 
-// ── 가족사진: 매번 무작위로 몇 장 뽑아 보여주기 ──
-(function familyPhotos(){
-  const POOL_SIZE = 115;
-  const SHOW = 5;
-  const pool = Array.from({length: POOL_SIZE}, (_, i) => `photos/pool/p${String(i+1).padStart(3,'0')}.jpg`);
-  for (let i = pool.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [pool[i], pool[j]] = [pool[j], pool[i]];
-  }
-  document.getElementById('familyStrip').innerHTML = pool.slice(0, SHOW).map(src =>
-    `<img src="${src}" alt="가족사진" loading="lazy" onerror="this.style.display='none'">`
-  ).join('');
-})();
-
 const flat = [];
 DATA.snapshots.forEach(snap=>{
   snap.accounts.forEach(acc=>{
@@ -587,40 +552,6 @@ const current = Array.from(latestMap.values());
 const detailLatest = new Map();
 flat.slice().sort((a,b)=>a.date.localeCompare(b.date)).forEach(r=>{
   if(r.holdings && r.holdings.length) detailLatest.set(r.member+"|"+r.institution+"|"+r.name, r);
-});
-
-// ── 일일 시세 반영: 주식/가상자산 보유종목을 최신 시장가 기준으로 스케일 ──
-// 매일 클라우드 스케줄러가 MARKET_LIVE만 갱신함. MARKET_ANCHOR는 이 기능 도입 기준일 값으로 고정.
-// 시세가 움직여도 보유수량(shares)은 그대로다 — 평가금액만 옮기고, 매입원가는 고정이니
-// 평가손익(gain)은 새 평가금액에서 다시 뺀다.
-const MARKET_ANCHOR = { date: "2026-08-23", spy: 767.00, btcKrw: 106570000 };
-const MARKET_LIVE   = { date: "2026-08-23", spy: 767.00, btcKrw: 106570000 };
-const marketRatio = { equity: MARKET_LIVE.spy / MARKET_ANCHOR.spy, crypto: MARKET_LIVE.btcKrw / MARKET_ANCHOR.btcKrw };
-function applyMarket(r){
-  if(r.balance<0) return;
-  if(r.category!=='투자' && r.category!=='연금') return;
-  if(r.holdings && r.holdings.length){
-    r.holdings = r.holdings.map(h=>{
-      const ratio = marketRatio[classifyHolding(h.name)] || 1;
-      if(ratio===1) return h;
-      const value = Math.round(h.value*ratio);
-      const scaled = Object.assign({}, h, {value});
-      if(h.gain!=null) scaled.gain = value - (h.value - h.gain);
-      return scaled;
-    });
-    r.balance = r.holdings.reduce((s,h)=>s+h.value,0);
-  } else {
-    r.balance = Math.round(r.balance * marketRatio.equity);
-  }
-}
-const liveRows = new Set(current);
-current.forEach(applyMarket);
-detailLatest.forEach((r,k)=>{
-  if(liveRows.has(r)) return;
-  // 이 행은 과거 스냅샷이라 순자산 추이 그래프가 원본 그대로 써야 한다 → 복제본에만 시세를 입힌다
-  const clone = Object.assign({}, r);
-  applyMarket(clone);
-  detailLatest.set(k, clone);
 });
 
 function memberShares(row){
@@ -649,8 +580,7 @@ document.getElementById('totalAssets').textContent = wonShort(totalAsset);
 document.getElementById('totalDebt').textContent = wonShort(totalDebt);
 
 const lastDate = current.map(r=>r.date).sort().slice(-1)[0];
-document.getElementById('updated').innerHTML =
-  "마지막 반영 " + lastDate + "<br>시세 갱신 " + MARKET_LIVE.date + " · 구성원 " + members.length + "명";
+document.getElementById('updated').innerHTML = "마지막 반영 " + lastDate + "<br>구성원 " + members.length + "명";
 
 const mc = document.getElementById('memberCards');
 members.forEach(m=>{
