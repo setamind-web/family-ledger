@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow, noarchive, noimageindex">
 <title>우리 가족 자산통장</title>
 <style>
   /* ── 1. 색 토큰 ───────────────────────────────────────────────
@@ -129,6 +130,22 @@
 
   footer.priv{color:var(--sub); font-size:var(--fs-micro); margin-top:18px; text-align:center;}
 
+  .family{margin-bottom:20px;}
+  .family .cap{font-size:var(--fs-body); color:var(--sub); margin-bottom:12px;}
+  .family-strip{display:flex; gap:16px; overflow-x:auto; padding:8px 4px 16px;}
+  .family-strip img{
+    height:190px; width:auto; display:block; border-radius:6px;
+    border:7px solid var(--ink2); box-shadow:0 6px 18px rgba(233,96,143,.28);
+    flex-shrink:0; transition:transform .15s ease;
+  }
+  .family-strip img:hover{transform:translateY(-4px) rotate(0deg) !important;}
+  .family-strip img:nth-child(1){transform:rotate(-3deg);}
+  .family-strip img:nth-child(2){transform:rotate(2deg);}
+  .family-strip img:nth-child(3){transform:rotate(-1.5deg);}
+  .family-strip img:nth-child(4){transform:rotate(3deg);}
+  .family-strip img:nth-child(5){transform:rotate(-2deg);}
+  @media (max-width:620px){ .family-strip img{height:132px; border-width:5px;} }
+
   /* ── 6. 보유 종목 ───────────────────────────────────────── */
   .qty-summary{background:linear-gradient(160deg,var(--ink3),var(--ink2)); border:1px solid var(--line);
     border-radius:16px; padding:16px 18px; margin-bottom:14px;}
@@ -160,6 +177,16 @@
     border-radius:12px; padding:11px 14px; font-size:var(--fs-body); color:var(--text);
     margin-bottom:14px; line-height:1.7;}
   .warnbox b{color:var(--warn-ink);}
+
+  .live-head{display:flex; justify-content:space-between; align-items:baseline; gap:12px;
+    flex-wrap:wrap; margin-bottom:4px;}
+  .live-head .big{font-family:'Noto Serif KR',ui-serif,Georgia,serif; font-size:26px; font-weight:700;}
+  .live-sub{font-size:var(--fs-micro); color:var(--sub); line-height:1.7; margin-bottom:12px;}
+  .live-row{display:grid; grid-template-columns:1fr auto auto; gap:4px 12px; align-items:baseline;
+    padding:7px 0; border-top:1px dashed var(--line); font-size:var(--fs-body);}
+  .live-row .pr{font-size:var(--fs-micro); color:var(--sub); text-align:right; white-space:nowrap;}
+  .live-row .mn{text-align:right; white-space:nowrap; font-weight:700;}
+  @media (max-width:620px){ .live-row{grid-template-columns:1fr auto;} .live-row .pr{grid-column:1/-1; text-align:left;} }
 
   /* ── 7. 시뮬레이터 ──────────────────────────────────────── */
   .sim-row{margin-bottom:18px;}
@@ -203,6 +230,11 @@
     <div class="updated" id="updated"></div>
   </div>
 
+  <div class="family">
+    <div class="cap">우리 넷, 오늘도 자라는 중 🌱</div>
+    <div class="family-strip" id="familyStrip"></div>
+  </div>
+
   <div class="cover">
     <h1>💰 지금 우리 순자산</h1>
     <div class="amount num" id="totalNet">-</div>
@@ -214,6 +246,11 @@
   </div>
 
   <div class="entries" id="memberCards"></div>
+
+  <section class="panel" id="livePanel" hidden>
+    <h2>📊 오늘의 시세</h2>
+    <div id="liveBody"></div>
+  </section>
 
   <section class="panel">
     <h2>🧩 무엇으로 갖고 있나</h2>
@@ -315,6 +352,9 @@
 <audio id="bgmAudio" src="audio/bgm-cafe.mp3" loop preload="none"></audio>
 
 <script>
+// 시세는 prices.py 가 채운다. 없으면 이 칸은 그냥 안 보인다(정직한 고장).
+const PRICES = {"fetched_at":"2026-09-05 23:08","fx":{"USDKRW":1351.0999755859375,"prev":1355.4100341796875,"date":"20260905"},"quotes":{"KODEX 미국S&P500(H)":{"src":"kr","code":"449180","cur":"KRW","conf":"확정","date":"20260904","price":17310.0,"prev_date":"20260903","prev":17110.0},"KODEX 미국S&P500":{"src":"kr","code":"379800","cur":"KRW","conf":"확정","date":"20260904","price":23620.0,"prev_date":"20260903","prev":23485.0},"KODEX 미국나스닥100":{"src":"kr","code":"379810","cur":"KRW","conf":"확정","date":"20260904","price":26470.0,"prev_date":"20260903","prev":26205.0},"삼성전자":{"src":"kr","code":"005930","cur":"KRW","conf":"확정","date":"20260904","price":255500.0,"prev_date":"20260903","prev":250000.0},"삼성SDI":{"src":"kr","code":"006400","cur":"KRW","conf":"확정","date":"20260904","price":548000.0,"prev_date":"20260903","prev":539000.0},"SPY (S&P500 SPDR ETF)":{"src":"us","code":"SPY","cur":"USD","conf":"확정","date":"20260904","price":770.1900024414062,"prev_date":"20260903","prev":773.1699829101562},"아이셰어즈 러셀2000 ETF":{"src":"us","code":"IWM","cur":"USD","conf":"확정","date":"20260904","price":296.010009765625,"prev_date":"20260903","prev":295.19000244140625},"뱅가드 미국 초장기 국채 ETF":{"src":"us","code":"EDV","cur":"USD","conf":"확정","date":"20260904","price":60.290000915527344,"prev_date":"20260903","prev":60.099998474121094},"비트코인(BTC)":{"src":"btc","code":"KRW-BTC","cur":"KRW","conf":"확정","date":"20260905","price":108834000.0,"prev_date":null,"prev":109126000.0},"애플":{"src":"us","code":"AAPL","cur":"USD","conf":"확정","date":"20260904","price":319.9700012207031,"prev_date":"20260903","prev":328.2099914550781},"엔비디아":{"src":"us","code":"NVDA","cur":"USD","conf":"확정","date":"20260904","price":230.36000061035156,"prev_date":"20260903","prev":228.4499969482422},"테슬라":{"src":"us","code":"TSLA","cur":"USD","conf":"확정","date":"20260904","price":354.0799865722656,"prev_date":"20260903","prev":376.3699951171875},"알파벳 A":{"src":"us","code":"GOOGL","cur":"USD","conf":"확정","date":"20260904","price":338.4599914550781,"prev_date":"20260903","prev":342.4800109863281},"메타 플랫폼스":{"src":"us","code":"META","cur":"USD","conf":"확정","date":"20260904","price":616.77001953125,"prev_date":"20260903","prev":610.6799926757812},"마이크로소프트":{"src":"us","code":"MSFT","cur":"USD","conf":"확정","date":"20260904","price":499.70001220703125,"prev_date":"20260903","prev":510.1199951171875},"아마존닷컴":{"src":"us","code":"AMZN","cur":"USD","conf":"확정","date":"20260904","price":258.510009765625,"prev_date":"20260903","prev":258.8999938964844},"나이키":{"src":"us","code":"NKE","cur":"USD","conf":"확정","date":"20260904","price":38.400001525878906,"prev_date":"20260903","prev":38.77000045776367},"KODEX 장기종합채권(AA-이상)액티브":{"src":null,"code":null,"cur":"KRW","conf":"미확인","error":"종목코드 미확인 — 시세 안 붙임"}},"derived":{"비트코인(BTC)":0.645526492136368}}; /*PRICES*/
+
 const DATA = {
   "members": ["아빠", "엄마", "시아", "시우"],
   "categories": ["입출금", "저축", "투자", "연금", "부동산", "부채"],
@@ -531,6 +571,20 @@ function pctStr(gain, cost){
 function gainSpan(gain, cost){
   return `<span class="${gain>=0?'up':'down'}">${gain>=0?'+':''}${gainAmt(gain)} ${pctStr(gain,cost)}</span>`;
 }
+
+// ── 가족사진: 매번 무작위로 몇 장 뽑아 보여주기 ──
+(function familyPhotos(){
+  const POOL_SIZE = 115;
+  const SHOW = 5;
+  const pool = Array.from({length: POOL_SIZE}, (_, i) => `photos/pool/p${String(i+1).padStart(3,'0')}.jpg`);
+  for (let i = pool.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [pool[i], pool[j]] = [pool[j], pool[i]];
+  }
+  document.getElementById('familyStrip').innerHTML = pool.slice(0, SHOW).map(src =>
+    `<img src="${src}" alt="가족사진" loading="lazy" onerror="this.style.display='none'">`
+  ).join('');
+})();
 
 const flat = [];
 DATA.snapshots.forEach(snap=>{
@@ -850,6 +904,63 @@ document.getElementById('qtyList').innerHTML = cardList.map(([name, a])=>{
     </div>
     <details class="more"><summary>펼쳐 보기</summary><div class="qty-rows">${items}</div></details>
   </div>`;
+})();
+
+// ── 오늘의 시세 (prices.py 가 채웠을 때만) ─────────────────────────
+// 확인값(스크린샷)과 시세 추정값은 절대 섞지 않는다. 여기 숫자는 전부 '추정'이고,
+// 위의 순자산·계좌 잔액은 전부 '확인값'이다. 화면에도 그렇게 적어둔다.
+(function renderLive(){
+  if(typeof PRICES === 'undefined' || !PRICES || !PRICES.quotes) return;
+  const CASHRE = /예수금|현금|소액계좌/;
+  const fxNow = PRICES.fx.USDKRW, fxPrev = PRICES.fx.prev;
+  const agg = {};
+  Array.from(detailLatest.values()).forEach(r=>{
+    if(r.balance<=0 || (r.category!=='투자' && r.category!=='연금')) return;
+    (r.holdings||[]).forEach(h=>{
+      if(CASHRE.test(h.name)) return;
+      const q = PRICES.quotes[h.name];
+      let shares = h.shares;
+      if(shares==null && PRICES.derived && PRICES.derived[h.name]) shares = PRICES.derived[h.name];
+      if(!q || q.price==null || shares==null) return;
+      const fN = q.cur==='USD'?fxNow:1, fP = q.cur==='USD'?fxPrev:1;
+      const a = agg[h.name] || (agg[h.name] = {name:h.name, now:0, prev:0, cur:q.cur,
+        pNow:q.price, pPrev:q.prev, units:{}, est:h.shares==null});
+      a.now  += shares*q.price*fN;
+      a.prev += shares*q.prev *fP;
+      const u = h.unit || (/비트코인/.test(h.name)?'개':'주');
+      a.units[u] = (a.units[u]||0) + shares;
+    });
+  });
+  const list = Object.values(agg);
+  if(!list.length) return;
+  const now = list.reduce((s,a)=>s+a.now,0), prev = list.reduce((s,a)=>s+a.prev,0);
+  const d = now - prev;
+
+  const price = (p,cur)=> cur==='USD' ? '$'+p.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})
+    : (p>=1e6 ? Math.round(p/1e4).toLocaleString('ko-KR')+'만' : Math.round(p).toLocaleString('ko-KR'));
+  const qty = a=>Object.entries(a.units).map(([u,n])=>
+    (n<10 ? String(+n.toFixed(4)) : Math.round(n).toLocaleString('ko-KR'))+u).join(' + ');
+
+  document.getElementById('liveBody').innerHTML = `
+    <div class="live-head">
+      <span style="font-size:var(--fs-body); color:var(--sub)">주식·코인 ${wonShort(now)}</span>
+      <span class="big num ${d>=0?'up':'down'}">${d>=0?'+':''}${wonShort(d)}</span>
+    </div>
+    <div class="live-sub">어제 ${wonShort(prev)} 대비 <b class="num ${d>=0?'up':'down'}">${pctStr(d, prev)}</b>
+      · ${PRICES.fetched_at} 조회 · 환율 <span class="num">${Math.round(fxNow).toLocaleString('ko-KR')}원/$</span><br>
+      값이 오르내리는 자산만 모은 칸이에요. <b style="color:var(--text)">보유수량은 스크린샷으로 확인한 것이고,
+      가격만 인터넷에서 가져온 추정</b>이라 실제 잔고와는 조금 다를 수 있어요.</div>
+    ${list.sort((x,y)=>Math.abs(y.now-y.prev)-Math.abs(x.now-x.prev)).map(a=>{
+      const dd = a.now-a.prev;
+      return `<div class="live-row">
+        <span>${a.name}${a.est?' <span class="pill">수량 추정</span>':''}
+          <span class="pill">${qty(a)}</span></span>
+        <span class="pr">${price(a.pPrev,a.cur)} → ${price(a.pNow,a.cur)}
+          <b class="${a.pNow>=a.pPrev?'up':'down'}">${pctStr(a.pNow-a.pPrev, a.pPrev)}</b></span>
+        <span class="mn num ${dd>=0?'up':'down'}">${dd>=0?'+':''}${gainAmt(dd)}</span>
+      </div>`;
+    }).join('')}`;
+  document.getElementById('livePanel').hidden = false;
 })();
 
 // ── 순자산 추이 (실제 기록만) ──────────────────────────────
