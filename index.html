@@ -236,9 +236,10 @@
   </div>
 
   <div class="cover">
-    <h1>💰 지금 우리 순자산</h1>
+    <h1 id="netLabel">💰 시세 반영 추정 순자산</h1>
     <div class="amount num" id="totalNet">-</div>
     <div class="exact num" id="totalNetExact"></div>
+    <div class="exact" id="marketBasis"></div>
     <div class="sub">
       <div>가진 것 <b class="num" id="totalAssets">-</b></div>
       <div>갚을 것 <b class="num down" id="totalDebt">-</b></div>
@@ -326,6 +327,7 @@
 
   <section class="panel">
     <h2>📋 계좌별 상세</h2>
+    <div class="basis">이 표는 증권사 앱에서 마지막으로 확인한 금액이에요. 맨 위 순자산에는 확인된 보유수량과 최신 시세를 반영한 추정치가 표시돼요.</div>
     <div class="filters">
       <select id="fMember"><option value="">전체 구성원</option></select>
       <select id="fCategory"><option value="">전체 카테고리</option></select>
@@ -353,7 +355,7 @@
 
 <script>
 // 시세는 prices.py 가 채운다. 없으면 이 칸은 그냥 안 보인다(정직한 고장).
-const PRICES = {"fetched_at":"2026-09-05 23:08","fx":{"USDKRW":1351.0999755859375,"prev":1355.4100341796875,"date":"20260905"},"quotes":{"KODEX 미국S&P500(H)":{"src":"kr","code":"449180","cur":"KRW","conf":"확정","date":"20260904","price":17310.0,"prev_date":"20260903","prev":17110.0},"KODEX 미국S&P500":{"src":"kr","code":"379800","cur":"KRW","conf":"확정","date":"20260904","price":23620.0,"prev_date":"20260903","prev":23485.0},"KODEX 미국나스닥100":{"src":"kr","code":"379810","cur":"KRW","conf":"확정","date":"20260904","price":26470.0,"prev_date":"20260903","prev":26205.0},"삼성전자":{"src":"kr","code":"005930","cur":"KRW","conf":"확정","date":"20260904","price":255500.0,"prev_date":"20260903","prev":250000.0},"삼성SDI":{"src":"kr","code":"006400","cur":"KRW","conf":"확정","date":"20260904","price":548000.0,"prev_date":"20260903","prev":539000.0},"SPY (S&P500 SPDR ETF)":{"src":"us","code":"SPY","cur":"USD","conf":"확정","date":"20260904","price":770.1900024414062,"prev_date":"20260903","prev":773.1699829101562},"아이셰어즈 러셀2000 ETF":{"src":"us","code":"IWM","cur":"USD","conf":"확정","date":"20260904","price":296.010009765625,"prev_date":"20260903","prev":295.19000244140625},"뱅가드 미국 초장기 국채 ETF":{"src":"us","code":"EDV","cur":"USD","conf":"확정","date":"20260904","price":60.290000915527344,"prev_date":"20260903","prev":60.099998474121094},"비트코인(BTC)":{"src":"btc","code":"KRW-BTC","cur":"KRW","conf":"확정","date":"20260905","price":108834000.0,"prev_date":null,"prev":109126000.0},"애플":{"src":"us","code":"AAPL","cur":"USD","conf":"확정","date":"20260904","price":319.9700012207031,"prev_date":"20260903","prev":328.2099914550781},"엔비디아":{"src":"us","code":"NVDA","cur":"USD","conf":"확정","date":"20260904","price":230.36000061035156,"prev_date":"20260903","prev":228.4499969482422},"테슬라":{"src":"us","code":"TSLA","cur":"USD","conf":"확정","date":"20260904","price":354.0799865722656,"prev_date":"20260903","prev":376.3699951171875},"알파벳 A":{"src":"us","code":"GOOGL","cur":"USD","conf":"확정","date":"20260904","price":338.4599914550781,"prev_date":"20260903","prev":342.4800109863281},"메타 플랫폼스":{"src":"us","code":"META","cur":"USD","conf":"확정","date":"20260904","price":616.77001953125,"prev_date":"20260903","prev":610.6799926757812},"마이크로소프트":{"src":"us","code":"MSFT","cur":"USD","conf":"확정","date":"20260904","price":499.70001220703125,"prev_date":"20260903","prev":510.1199951171875},"아마존닷컴":{"src":"us","code":"AMZN","cur":"USD","conf":"확정","date":"20260904","price":258.510009765625,"prev_date":"20260903","prev":258.8999938964844},"나이키":{"src":"us","code":"NKE","cur":"USD","conf":"확정","date":"20260904","price":38.400001525878906,"prev_date":"20260903","prev":38.77000045776367},"KODEX 장기종합채권(AA-이상)액티브":{"src":null,"code":null,"cur":"KRW","conf":"미확인","error":"종목코드 미확인 — 시세 안 붙임"}},"derived":{"비트코인(BTC)":0.645526492136368}}; /*PRICES*/
+const PRICES = {"fetched_at":"2026-09-23 05:55","fx":{"USDKRW":1354.510009765625,"prev":1373.6800537109375,"date":"20260922"},"quotes":{"KODEX 미국S&P500(H)":{"src":"kr","code":"449180","cur":"KRW","conf":"확정","date":"20260922","price":17340.0,"prev_date":"20260921","prev":17160.0},"KODEX 미국S&P500":{"src":"kr","code":"379800","cur":"KRW","conf":"확정","date":"20260922","price":23800.0,"prev_date":"20260921","prev":23940.0},"KODEX 미국나스닥100":{"src":"kr","code":"379810","cur":"KRW","conf":"확정","date":"20260922","price":27420.0,"prev_date":"20260921","prev":27290.0},"삼성전자":{"src":"kr","code":"005930","cur":"KRW","conf":"확정","date":"20260922","price":277500.0,"prev_date":"20260921","prev":275000.0},"삼성SDI":{"src":"kr","code":"006400","cur":"KRW","conf":"확정","date":"20260922","price":531000.0,"prev_date":"20260921","prev":536000.0},"SPY (S&P500 SPDR ETF)":{"src":"us","code":"SPY","cur":"USD","conf":"확정","date":"20260922","price":773.3800048828125,"prev_date":"20260921","prev":773.5},"아이셰어즈 러셀2000 ETF":{"src":"us","code":"IWM","cur":"USD","conf":"확정","date":"20260922","price":287.2099914550781,"prev_date":"20260921","prev":285.5799865722656},"뱅가드 미국 초장기 국채 ETF":{"src":"us","code":"EDV","cur":"USD","conf":"확정","date":"20260922","price":60.22999954223633,"prev_date":"20260921","prev":60.29999923706055},"비트코인(BTC)":{"src":"btc","code":"KRW-BTC","cur":"KRW","conf":"확정","date":"20260923","price":115753000.0,"prev_date":null,"prev":117123000.0},"애플":{"src":"us","code":"AAPL","cur":"USD","conf":"확정","date":"20260922","price":339.75,"prev_date":"20260921","prev":338.9800109863281},"엔비디아":{"src":"us","code":"NVDA","cur":"USD","conf":"확정","date":"20260922","price":228.8699951171875,"prev_date":"20260921","prev":227.3800048828125},"테슬라":{"src":"us","code":"TSLA","cur":"USD","conf":"확정","date":"20260922","price":378.8999938964844,"prev_date":"20260921","prev":375.29998779296875},"알파벳 A":{"src":"us","code":"GOOGL","cur":"USD","conf":"확정","date":"20260922","price":351.1600036621094,"prev_date":"20260921","prev":354.9700012207031},"메타 플랫폼스":{"src":"us","code":"META","cur":"USD","conf":"확정","date":"20260922","price":736.594970703125,"prev_date":"20260921","prev":741.25},"마이크로소프트":{"src":"us","code":"MSFT","cur":"USD","conf":"확정","date":"20260922","price":498.0,"prev_date":"20260921","prev":501.6099853515625},"아마존닷컴":{"src":"us","code":"AMZN","cur":"USD","conf":"확정","date":"20260922","price":254.97999572753906,"prev_date":"20260921","prev":258.45001220703125},"나이키":{"src":"us","code":"NKE","cur":"USD","conf":"확정","date":"20260922","price":36.099998474121094,"prev_date":"20260921","prev":36.099998474121094},"KODEX 장기종합채권(AA-이상)액티브":{"src":null,"code":null,"cur":"KRW","conf":"미확인","error":"종목코드 미확인 — 시세 안 붙임"}},"derived":{"비트코인(BTC)":0.645526492136368}}; /*PRICES*/
 
 const DATA = {
   "members": ["아빠", "엄마", "시아", "시우"],
@@ -608,33 +610,89 @@ flat.slice().sort((a,b)=>a.date.localeCompare(b.date)).forEach(r=>{
   if(r.holdings && r.holdings.length) detailLatest.set(r.member+"|"+r.institution+"|"+r.name, r);
 });
 
-function memberShares(row){
+function liveHoldingMark(h){
+  if(!priceSnapshot || /예수금|현금/.test(h.name)) return null;
+  const q = priceSnapshot.quotes[h.name];
+  // 확인된 스크린샷 수량만 총자산에 반영한다. 역산 수량(예: 비트코인)은 참고용이다.
+  const shares = h.shares;
+  if(!q || !Number.isFinite(q.price) || !Number.isFinite(shares) || shares<=0) return null;
+  const fx = q.cur==='USD' ? priceSnapshot.fx.USDKRW : 1;
+  return shares*q.price*fx;
+}
+
+function memberShares(row, balance=row.balance){
   if(row.member.startsWith("공동")){
-    return [{member:"아빠", balance:row.balance/2},{member:"엄마", balance:row.balance/2}];
+    return [{member:"아빠", balance:balance/2},{member:"엄마", balance:balance/2}];
   }
-  return [{member:row.member, balance:row.balance}];
+  return [{member:row.member, balance:balance}];
+}
+
+// 가격은 수량이 확인된 종목에만 곱한다. 원본 스냅샷의 숫자는 건드리지 않고,
+// 앱 잔액에서 해당 종목의 스크린샷 평가액을 빼고 현재 시세 평가액을 더한다.
+// 종목 수량/시세를 모르는 계좌는 마지막 확인 잔액 그대로 둔다.
+const liveAccountDelta = new Map();
+let livePricedValue = 0, liveBaseValue = 0, livePositionCount = 0;
+const priceSnapshot = (typeof PRICES !== 'undefined' && PRICES && PRICES.quotes) ? PRICES : null;
+const liveCashRE = /예수금|현금/;
+if(priceSnapshot){
+  current.forEach(r=>{
+    if(r.balance<=0 || (r.category!=='투자' && r.category!=='연금')) return;
+    const d = detailLatest.get(r.member+"|"+r.institution+"|"+r.name);
+    if(!d || !d.holdings) return;
+    let delta = 0;
+    d.holdings.forEach(h=>{
+      const marked = liveHoldingMark(h);
+      if(marked==null) return;
+      delta += marked - h.value;
+      liveBaseValue += h.value;
+      livePricedValue += marked;
+      livePositionCount++;
+    });
+    liveAccountDelta.set(r.member+"|"+r.institution+"|"+r.name, delta);
+  });
+}
+function liveBalance(row){
+  return row.balance + (liveAccountDelta.get(row.member+"|"+row.institution+"|"+row.name)||0);
 }
 
 const members = DATA.members;
 const memberTotals = {}; members.forEach(m=>memberTotals[m]={asset:0,debt:0});
 current.forEach(row=>{
-  memberShares(row).forEach(s=>{
+  memberShares(row, liveBalance(row)).forEach(s=>{
     if(!memberTotals[s.member]) memberTotals[s.member]={asset:0,debt:0};
     if(s.balance<0) memberTotals[s.member].debt += -s.balance;
     else memberTotals[s.member].asset += s.balance;
   });
 });
 
-let totalAsset=0, totalDebt=0;
-current.forEach(r=>{ if(r.balance<0) totalDebt += -r.balance; else totalAsset += r.balance; });
+let totalAsset=0, totalDebt=0, confirmedAsset=0;
+current.forEach(r=>{
+  const balance = liveBalance(r);
+  if(balance<0) totalDebt += -balance; else totalAsset += balance;
+  if(r.balance>0) confirmedAsset += r.balance;
+});
+const confirmedDebt = current.reduce((s,r)=>s+(r.balance<0?-r.balance:0),0);
+const confirmedNet = confirmedAsset-confirmedDebt;
 
 document.getElementById('totalNet').textContent = wonShort(totalAsset-totalDebt);
-document.getElementById('totalNetExact').textContent = won(totalAsset-totalDebt);
+const marketNetChange = (totalAsset-totalDebt)-confirmedNet;
+document.getElementById('totalNetExact').textContent = priceSnapshot
+  ? `마지막 앱 확인 ${won(confirmedNet)} · 시세 반영 ${marketNetChange>=0?'+':''}${gainAmt(marketNetChange)}`
+  : won(confirmedNet);
+document.getElementById('netLabel').textContent = priceSnapshot ? '💰 시세 반영 추정 순자산' : '💰 마지막 확인 순자산';
+const quoteDates = priceSnapshot ? Object.values(priceSnapshot.quotes)
+  .filter(q=>q.price!=null && q.date && q.src!=='btc').map(q=>q.date).sort() : [];
+const latestQuoteDate = quoteDates.length ? quoteDates[quoteDates.length-1].replace(/^(\d{4})(\d{2})(\d{2})$/, '$1-$2-$3') : '';
+document.getElementById('marketBasis').textContent = priceSnapshot
+  ? `주식 ${latestQuoteDate} 종가 · 확인된 수량 ${livePositionCount}개 반영 (${wonShort(livePricedValue)}) · 비트코인은 수량 추정이라 별도 · 자료 조회 ${priceSnapshot.fetched_at}`
+  : '시세 자료가 없어 마지막 앱 확인 금액을 표시합니다.';
 document.getElementById('totalAssets').textContent = wonShort(totalAsset);
 document.getElementById('totalDebt').textContent = wonShort(totalDebt);
 
 const lastDate = current.map(r=>r.date).sort().slice(-1)[0];
-document.getElementById('updated').innerHTML = "마지막 반영 " + lastDate + "<br>구성원 " + members.length + "명";
+document.getElementById('updated').innerHTML = "잔액 확인 " + lastDate
+  + (priceSnapshot ? "<br>시세 조회 " + priceSnapshot.fetched_at : "")
+  + "<br>구성원 " + members.length + "명";
 
 const mc = document.getElementById('memberCards');
 members.forEach(m=>{
@@ -649,7 +707,7 @@ members.forEach(m=>{
 
 // ── 자산 구성 ──
 const catTotals = {};
-current.forEach(r=>{ if(r.balance<0) return; catTotals[r.category] = (catTotals[r.category]||0) + r.balance; });
+current.forEach(r=>{ const b=liveBalance(r); if(b<0) return; catTotals[r.category] = (catTotals[r.category]||0) + b; });
 const catEntries = Object.entries(catTotals).filter(([,v])=>v>0).sort((a,b)=>b[1]-a[1]);
 const catSum = catEntries.reduce((s,[,v])=>s+v,0);
 const realtyPct = (catTotals['부동산']||0)/catSum*100;
@@ -946,10 +1004,10 @@ document.getElementById('qtyList').innerHTML = cardList.map(([name, a])=>{
       <span style="font-size:var(--fs-body); color:var(--sub)">주식·코인 ${wonShort(now)}</span>
       <span class="big num ${d>=0?'up':'down'}">${d>=0?'+':''}${wonShort(d)}</span>
     </div>
-    <div class="live-sub">어제 ${wonShort(prev)} 대비 <b class="num ${d>=0?'up':'down'}">${pctStr(d, prev)}</b>
+    <div class="live-sub">직전 기준가 ${wonShort(prev)} 대비 <b class="num ${d>=0?'up':'down'}">${pctStr(d, prev)}</b>
       · ${PRICES.fetched_at} 조회 · 환율 <span class="num">${Math.round(fxNow).toLocaleString('ko-KR')}원/$</span><br>
-      값이 오르내리는 자산만 모은 칸이에요. <b style="color:var(--text)">보유수량은 스크린샷으로 확인한 것이고,
-      가격만 인터넷에서 가져온 추정</b>이라 실제 잔고와는 조금 다를 수 있어요.</div>
+      주식은 최신 거래일 가격, 비트코인은 조회 시세예요. 페이지를 열어둬도 자동 갱신되지는 않아요.
+      <b style="color:var(--text)">보유수량은 스크린샷 확인값, 가격은 조회 시점 추정</b>이라 실제 잔고와 조금 다를 수 있어요.</div>
     ${list.sort((x,y)=>Math.abs(y.now-y.prev)-Math.abs(x.now-x.prev)).map(a=>{
       const dd = a.now-a.prev;
       return `<div class="live-row">
@@ -1074,9 +1132,9 @@ function buildPrincipals(){
       list.push({ type:'cash', value:r.balance });
     } else if(r.category==='투자' || r.category==='연금'){
       if(r.holdings && r.holdings.length){
-        r.holdings.forEach(h => list.push({ type: classifyHolding(h.name), value: h.value }));
+        r.holdings.forEach(h => list.push({ type: classifyHolding(h.name), value: liveHoldingMark(h) ?? h.value }));
       } else {
-        list.push({ type:'equity', value: r.balance });
+        list.push({ type:'equity', value: liveBalance(r) });
       }
     }
   });
