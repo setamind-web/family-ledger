@@ -1366,8 +1366,8 @@ const tinyNoQty = noQty.filter(([,a])=>a.value < MICRO);
         ${c.trade===0
           ? `사고판 것 없이 <b style="color:var(--text)">시세로만</b> 움직였어요 <span class="num">(${(delta/c.a0.value*100).toFixed(1)}%)</span>`
           : `<b class="num" style="color:var(--text)">시세 ${c.price>=0?'+':''}${gainAmt(c.price)}</b>
-             · <b class="num" style="color:var(--text)">매매 ${c.trade>=0?'+':''}${gainAmt(c.trade)}</b><br>
-             수량 <span class="num">${qtyStr(c.a0.shares,c.a0.unit)} → ${qtyStr(c.a1.shares,c.a1.unit)}</span>`}
+             · <b class="num" style="color:var(--text)">수량 변화 ${c.trade>=0?'+':''}${gainAmt(c.trade)}</b><br>
+             수량 <span class="num">${qtyStr(c.a0.shares,c.a0.unit)} → ${qtyStr(c.a1.shares,c.a1.unit)}</span><br>매매·계좌이동 여부는 미확인입니다.`}
       </div>
     </div>`;
   }).join('');
